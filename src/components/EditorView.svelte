@@ -182,20 +182,34 @@
 <div class="editor">
   <header>
     <h2>Puzzle Editor</h2>
+  </header>
+  
+  <div class="editor-sections">
     <div class="controls">
-      <label>ID <input type="text" value={meta.id} on:input={(e) => (meta.id = (e.target as HTMLInputElement).value)} /></label>
-      <label>Date <input type="date" value={meta.date} on:input={(e) => (meta.date = (e.target as HTMLInputElement).value)} /></label>
-      <label>Title <input type="text" value={meta.title} on:input={(e) => (meta.title = (e.target as HTMLInputElement).value)} /></label>
-      <label>Author <input type="text" value={meta.author} on:input={(e) => (meta.author = (e.target as HTMLInputElement).value)} /></label>
-      <span class="sep"></span>
-      <label>Rows <input type="number" min="1" max="12" value={rows} on:input={(e) => handleRowsInput((e.target as HTMLInputElement).value)} /></label>
-      <label>Cols <input type="number" min="1" max="12" value={cols} on:input={(e) => handleColsInput((e.target as HTMLInputElement).value)} /></label>
-      <span class="sep"></span>
       <button on:click={downloadJSON}>Export JSON</button>
       <button on:click={copyJSON}>Copy JSON</button>
-      <label class="import">Import <input type="file" accept="application/json" on:change={handleImportFile} /></label>
+      <div class="file-input-wrapper">
+        <input type="file" accept="application/json" on:change={handleImportFile} id="import-file" />
+        <label for="import-file" class="file-input-label">Import JSON</label>
+      </div>
     </div>
-  </header>
+
+    <div class="metadata-section">
+      <div class="metadata-row">
+        <label>ID <input type="text" value={meta.id} on:input={(e) => (meta.id = (e.target as HTMLInputElement).value)} placeholder="e.g., 2025-01-15" /></label>
+        <label>Date <input type="date" value={meta.date} on:input={(e) => (meta.date = (e.target as HTMLInputElement).value)} /></label>
+      </div>
+      <div class="metadata-row">
+        <label>Title <input type="text" value={meta.title} on:input={(e) => (meta.title = (e.target as HTMLInputElement).value)} placeholder="Puzzle title" /></label>
+        <label>Author <input type="text" value={meta.author} on:input={(e) => (meta.author = (e.target as HTMLInputElement).value)} placeholder="Your name" /></label>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label>Rows <input type="number" min="1" max="12" value={rows} on:input={(e) => handleRowsInput((e.target as HTMLInputElement).value)} /></label>
+      <label>Cols <input type="number" min="1" max="12" value={cols} on:input={(e) => handleColsInput((e.target as HTMLInputElement).value)} /></label>
+    </div>
+  </div>
 
   <div class="grid-wrap" bind:this={gridWrapEl}>
     <svg class="arrows" width={svgSize.width} height={svgSize.height} viewBox={`0 0 ${svgSize.width} ${svgSize.height}`} aria-hidden="true">
@@ -258,13 +272,118 @@
 
 <style>
   .editor { max-width: 960px; margin: 0 auto; padding: 16px; }
-  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  h2 { margin: 0; font-size: 20px; }
+  header { margin-bottom: 24px; }
+  h2 { margin: 0; font-size: 24px; font-weight: 600; color: #1f2937; }
+  
+  .editor-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  
+  .metadata-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .metadata-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .metadata-row label {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .metadata-row input {
+    width: 100%;
+  }
   .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-  label { display: inline-flex; align-items: center; gap: 6px; }
-  input[type="number"] { width: 80px; padding: 6px 8px; }
-  .sep { width: 1px; height: 24px; background: #ddd; display: inline-block; }
-  .import input[type="file"] { display: inline-block; }
+  label { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; 
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+  }
+  input[type="text"], input[type="date"], input[type="number"] { 
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    transition: all 0.15s ease;
+  }
+  input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  input[type="number"] { width: 80px; }
+  .sep { width: 1px; height: 24px; background: #d1d5db; display: inline-block; }
+  .file-input-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .file-input-wrapper input[type="file"] {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .file-input-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .file-input-label:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #1f2937;
+  }
+  .file-input-label:active {
+    background: #f3f4f6;
+    transform: translateY(1px);
+  }
+  
+  /* Export and Copy JSON button styling */
+  button {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  
+  button:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #1f2937;
+  }
+  
+  button:active {
+    background: #f3f4f6;
+    transform: translateY(1px);
+  }
 
   .grid { display: grid; gap: 10px; }
   .grid-wrap { position: relative; }
@@ -306,15 +425,21 @@
     margin-top: 4px;
   }
   .lock-btn {
-    background: none;
-    border: none;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
     font-size: 16px;
     cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 3px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
   }
   .lock-btn:hover {
-    background-color: rgba(0,0,0,0.1);
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+  .lock-btn:active {
+    background: #f3f4f6;
+    transform: translateY(1px);
   }
   .dirs { 
     display: flex; 
@@ -322,15 +447,91 @@
     font-size: 12px; 
     color: #666;
   }
+  .dirs label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .dirs label:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+  .dirs input[type="checkbox"] {
+    margin: 0;
+  }
 
   @media (prefers-color-scheme: dark) {
+    h2 { color: #f9fafb; }
     .tile { border-color: #444; }
     .tile.fixed { background-color: #2a2a2a; }
     .dirs { color: #aaa; }
     .word { background: transparent; border-color: #444; color: inherit; }
-    .sep { background: #333; }
+    .sep { background: #374151; }
     .arrows { color: #777; }
-    .lock-btn:hover { background-color: rgba(255,255,255,0.1); }
+    label { color: #f9fafb; }
+    input[type="text"], input[type="date"], input[type="number"] {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f9fafb;
+    }
+    input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+      .file-input-label {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f9fafb;
+    }
+    .file-input-label:hover {
+      background: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+    .file-input-label:active {
+      background: #111827;
+    }
+    
+    button {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f9fafb;
+    }
+    button:hover {
+      background: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+    button:active {
+      background: #111827;
+    }
+    .lock-btn {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f9fafb;
+    }
+    .lock-btn:hover {
+      background: #374151;
+      border-color: #4b5563;
+    }
+    .lock-btn:active {
+      background: #111827;
+    }
+    .dirs label {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f9fafb;
+    }
+    .dirs label:hover {
+      background: #374151;
+      border-color: #4b5563;
+    }
   }
 </style>
 

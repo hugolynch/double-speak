@@ -4,9 +4,21 @@
   let mode: 'play' | 'edit' = 'play'
 </script>
 
-<div style="padding: 8px 12px; display: flex; gap: 8px; align-items: center;">
-  <button on:click={() => (mode = 'play')} disabled={mode==='play'}>Play</button>
-  <button on:click={() => (mode = 'edit')} disabled={mode==='edit'}>Editor</button>
+<div class="mode-toggle">
+  <button 
+    class="mode-btn" 
+    class:active={mode==='play'}
+    on:click={() => (mode = 'play')}
+  >
+    Play
+  </button>
+  <button 
+    class="mode-btn" 
+    class:active={mode==='edit'}
+    on:click={() => (mode = 'edit')}
+  >
+    Editor
+  </button>
 </div>
 
 {#if mode === 'play'}
@@ -14,5 +26,65 @@
 {:else}
   <EditorView />
 {/if}
+
+<style>
+  .mode-toggle {
+    padding: 8px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .mode-btn {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .mode-btn:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #374151;
+  }
+  .mode-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+  }
+  .mode-btn.active:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .mode-toggle {
+      border-bottom-color: #374151;
+    }
+    .mode-btn {
+      background: #1f2937;
+      border-color: #374151;
+      color: #9ca3af;
+    }
+    .mode-btn:hover {
+      background: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+    .mode-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+    .mode-btn.active:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+  }
+</style>
 
 

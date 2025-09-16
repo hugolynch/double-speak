@@ -318,6 +318,25 @@
     background: transparent;
   }
   .toolbar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
+  .toolbar button {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .toolbar button:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+  .toolbar button:active {
+    background: #f3f4f6;
+    transform: translateY(1px);
+  }
   .status { color: #666; }
   @media (prefers-color-scheme: dark) {
     .subtitle { color: #aaa; }
@@ -331,6 +350,18 @@
     }
     .byline { color: #aaa; }
     .status { color: #aaa; }
+    .toolbar button {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f9fafb;
+    }
+    .toolbar button:hover {
+      background: #374151;
+      border-color: #4b5563;
+    }
+    .toolbar button:active {
+      background: #111827;
+    }
   }
   :global(button){ cursor: pointer; }
   :global(input){ font: inherit; }
