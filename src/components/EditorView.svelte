@@ -395,7 +395,7 @@
 </div>
 
 <style>
-  .editor { max-width: 960px; margin: 0 auto; padding: 16px; }
+  .editor { max-width: 880px; margin: 0 auto; padding: 24px; }
   header { margin-bottom: 24px; }
   h2 { margin: 0; font-size: 24px; font-weight: 600; color: #1f2937; }
   

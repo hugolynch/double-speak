@@ -268,7 +268,7 @@
 <div class="app">
   <header>
     <h1>Double Speak</h1>
-    <p class="subtitle">Daily word puzzle · {today}</p>
+    <p class="subtitle">{today}</p>
   </header>
   <main>
     {#if game.puzzle}
