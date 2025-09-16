@@ -1,0 +1,106 @@
+{
+  "id": "2025-09-16",
+  "date": "2025-09-16",
+  "title": "Circuits 0916",
+  "author": "test",
+  "grid": {
+    "rows": 4,
+    "cols": 4,
+    "cells": [
+      {},
+      {},
+      {
+        "fixed": "on top of"
+      },
+      {},
+      {
+        "fixed": "keep it"
+      },
+      {},
+      {},
+      {
+        "fixed": "warning"
+      },
+      {
+        "fixed": "crunch"
+      },
+      {},
+      {},
+      {},
+      {},
+      {
+        "fixed": "crunch"
+      },
+      {
+        "fixed": "offering"
+      },
+      {
+        "fixed": "language"
+      }
+    ],
+    "arrows": [
+      {
+        "from": 2,
+        "to": 6,
+        "dir": "down"
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 9,
+        "dir": "down"
+      },
+      {
+        "from": 6,
+        "to": 10,
+        "dir": "down"
+      },
+      {
+        "from": 7,
+        "to": 11,
+        "dir": "down"
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 13,
+        "dir": "down"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 14,
+        "dir": "down"
+      },
+      {
+        "from": 11,
+        "to": 15,
+        "dir": "down"
+      }
+    ]
+  },
+  "solutions": {
+    "5": "real",
+    "6": "world",
+    "9": "time",
+    "10": "peace",
+    "11": "sign"
+  }
+}

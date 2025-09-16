@@ -1,0 +1,22 @@
+{
+  "id": "2025-09-15",
+  "date": "2025-09-15",
+  "title": "Weather",
+  "author": "Team",
+  "grid": {
+    "rows": 2,
+    "cols": 2,
+    "cells": [
+      { "fixed": "brain" },
+      {},
+      {},
+      { "fixed": "storm" }
+    ],
+    "arrows": [
+      { "from": 0, "to": 1, "dir": "right" },
+      { "from": 0, "to": 2, "dir": "down" },
+      { "from": 2, "to": 3, "dir": "right" }
+    ]
+  },
+  "solutions": { "1": "storm", "2": "brain" }
+}

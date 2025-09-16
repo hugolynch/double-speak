@@ -1,0 +1,35 @@
+## What is *Double Speak*
+
+* Double Speak is a daily word puzzle
+* The core idea: you have a grid of empty boxes; some boxes are connected via directional arrows.
+
+---
+
+1. **Layout**
+
+   * You see a grid of boxes. Some of those boxes are already filled with words; others are empty and need your input.
+   * Between neighboring boxes there may be *arrows*. Arrows indicate connections: either horizontal (left→right) or vertical (top→bottom).
+
+2. **What you must supply**
+
+   * You pick exactly one **word** to fill **one** empty box.
+   * The word must form valid two-word compounds or phrases with **every** connected neighbor, respecting the direction of each arrow. That means:
+
+     * If an arrow points *from* another box *to* your empty box (left→right or top→bottom), you might be appending your word after the neighbor; or vice versa depending on which way the arrow is drawn. (The “direction matters”.)
+     * All connected arrows must be satisfied by that one word; if one fails, the word is rejected.
+
+3. **Solutions are unique per box**
+
+   * Each empty box has *exactly one* correct answer that works for all its connections.
+   * That word must form a valid compound (or two‐word phrase) with *each* neighbor (box) that it is connected to via arrows. The direction of the arrow matters: typically the submitted word attaches in left-to-right or top-to-bottom fashion.
+   * Each arrowed connection is independent; the word you pick must work with *all* connections from that box.
+
+4. **Hints**
+
+   * If you’re stuck, you can use a hint
+   * Using a hint reveals one letter in one empty box. You can access this via a “Hint!” button.
+
+5. **Goal / Completion**
+
+   * Once you correctly fill all empty boxes (by progressively selecting the correct word for each empty), the circuit puzzle is solved.
+   * Each day there is one puzzle. They appear in archive after expiration.
