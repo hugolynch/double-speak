@@ -210,8 +210,7 @@
     </svg>
     <div class="grid" style={`grid-template-columns: repeat(${cols}, 1fr);`}>
       {#each Array.from({ length: rows * cols }) as _, i}
-        <div class="tile" use:collectEl={i}>
-          <div class="tile-meta">{Math.floor(i / cols) + 1},{(i % cols) + 1}</div>
+        <div class={`tile ${cells[i]?.isFixed ? 'fixed' : ''}`} use:collectEl={i}>
           <input
             class="word"
             type="text"
@@ -222,24 +221,34 @@
               cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), fixed: val || undefined }
             }}
           />
-          <label class="toggle">
-            <input type="checkbox" checked={cells[i]?.isFixed} on:change={(e) => {
-              const checked = (e.target as HTMLInputElement).checked
-              cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), isFixed: checked }
-            }} />
-            Fixed at start
-          </label>
-          <div class="dirs">
-            <label><input type="checkbox" checked={cells[i]?.right} disabled={(i % cols) === cols - 1} on:change={(e) => {
-              const checked = (e.target as HTMLInputElement).checked
-              cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), right: checked }
-              measureArrows()
-            }} /> →</label>
-            <label><input type="checkbox" checked={cells[i]?.down} disabled={Math.floor(i / cols) === rows - 1} on:change={(e) => {
-              const checked = (e.target as HTMLInputElement).checked
-              cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), down: checked }
-              measureArrows()
-            }} /> ↓</label>
+          <div class="controls">
+            <button 
+              class="lock-btn"
+              type="button"
+              on:click={() => {
+                const current = cells[i] ?? { isFixed: false, right: false, down: false }
+                cells[i] = { ...current, isFixed: !current.isFixed }
+              }}
+              title={cells[i]?.isFixed ? 'Unlock (make editable)' : 'Lock (fixed at start)'}
+            >
+              {cells[i]?.isFixed ? '🔒' : '🔓'}
+            </button>
+            <div class="dirs">
+              {#if (i % cols) !== cols - 1}
+                <label><input type="checkbox" checked={cells[i]?.right} on:change={(e) => {
+                  const checked = (e.target as HTMLInputElement).checked
+                  cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), right: checked }
+                  measureArrows()
+                }} /> →</label>
+              {/if}
+              {#if Math.floor(i / cols) !== rows - 1}
+                <label><input type="checkbox" checked={cells[i]?.down} on:change={(e) => {
+                  const checked = (e.target as HTMLInputElement).checked
+                  cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), down: checked }
+                  measureArrows()
+                }} /> ↓</label>
+              {/if}
+            </div>
           </div>
         </div>
       {/each}
@@ -259,22 +268,69 @@
 
   .grid { display: grid; gap: 10px; }
   .grid-wrap { position: relative; }
-  .arrows { position: absolute; inset: 0; pointer-events: none; color: #aaa; }
+  .arrows { 
+    position: absolute; 
+    inset: 0; 
+    pointer-events: none; 
+    color: #aaa; 
+    z-index: 10;
+  }
   .arrows line { stroke: currentColor; stroke-width: 2; }
-  .tile { border: 1px dashed #bbb; border-radius: 8px; min-height: 72px; display: flex; align-items: center; justify-content: center; position: relative; }
-  .tile-meta { position: absolute; top: 6px; left: 8px; font-size: 12px; color: #888; }
-  .word { width: 90%; max-width: 200px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; }
-  .toggle { position: absolute; bottom: 6px; left: 8px; font-size: 12px; color: #666; display: inline-flex; align-items: center; gap: 6px; }
-  .dirs { position: absolute; bottom: 6px; right: 8px; display: inline-flex; gap: 10px; font-size: 12px; color: #666; }
+  .tile { 
+    border: 1px dashed #bbb; 
+    border-radius: 8px; 
+    min-height: 72px; 
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+    position: relative;
+    padding: 8px;
+    gap: 4px;
+  }
+  .tile.fixed {
+    background-color: #f5f5f5;
+  }
+  .word { 
+    width: 100%; 
+    padding: 6px 8px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    text-align: center;
+    font-size: 14px;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .lock-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+  .lock-btn:hover {
+    background-color: rgba(0,0,0,0.1);
+  }
+  .dirs { 
+    display: flex; 
+    gap: 8px; 
+    font-size: 12px; 
+    color: #666;
+  }
 
   @media (prefers-color-scheme: dark) {
     .tile { border-color: #444; }
-    .tile-meta { color: #aaa; }
+    .tile.fixed { background-color: #2a2a2a; }
     .dirs { color: #aaa; }
-    .toggle { color: #aaa; }
     .word { background: transparent; border-color: #444; color: inherit; }
     .sep { background: #333; }
     .arrows { color: #777; }
+    .lock-btn:hover { background-color: rgba(255,255,255,0.1); }
   }
 </style>
 

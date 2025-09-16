@@ -218,20 +218,19 @@
                 <span class="fixed-text">{cell.fixed}</span>
               </div>
             {:else}
-              <div class={`cell empty ${game.state.focusedCell === i ? 'focused' : ''}`} use:collectEl={i}>
-                <input
-                  class="entry"
-                  type="text"
-                  placeholder={cell.hint ?? ''}
-                  value={game.state.entries[i] ?? ''}
-                  on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
-                  on:focus={() => focusCell(i)}
-                  on:keydown={(e) => {
-                    if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'Tab') { e.preventDefault(); goNext() }
-                    if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
-                  }}
-                />
-              </div>
+              <input
+                class={`cell empty entry ${game.state.focusedCell === i ? 'focused' : ''}`}
+                type="text"
+                placeholder={cell.hint ?? ''}
+                value={game.state.entries[i] ?? ''}
+                on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
+                on:focus={() => focusCell(i)}
+                on:keydown={(e) => {
+                  if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'Tab') { e.preventDefault(); goNext() }
+                  if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
+                }}
+                use:collectEl={i}
+              />
             {/if}
           {:else}
             <!-- Unused cell - invisible but still takes up grid space for arrow positioning -->
@@ -280,7 +279,8 @@
     stroke-width: 2;
   }
   .cell {
-    min-height: 72px;
+    height: 72px;
+    width: 100%;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 8px;
@@ -288,6 +288,7 @@
     align-items: center;
     justify-content: center;
     background: var(--cell-bg, transparent);
+    box-sizing: border-box;
   }
   .cell.unused {
     border: none;
@@ -301,15 +302,20 @@
     outline: 2px solid #4f46e5;
     outline-offset: -2px;
   }
-  .fixed-text { font-weight: 600; }
+  .fixed-text { 
+    font-weight: 600; 
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
   .entry {
+    text-align: center;
+    font: inherit;
     width: 100%;
     height: 100%;
-    padding: 8px 10px;
-    border: none;
-    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    outline: none;
     background: transparent;
-    font: inherit;
   }
   .toolbar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
   .status { color: #666; }
@@ -318,7 +324,11 @@
     main { border-top-color: #333; }
     .cell { border-color: #333; }
     .cell.fixed { --cell-bg: rgba(255,255,255,0.04); }
-    .entry { background: transparent; color: inherit; }
+    .entry { 
+      background: transparent; 
+      color: inherit; 
+      border-color: #555;
+    }
     .byline { color: #aaa; }
     .status { color: #aaa; }
   }
