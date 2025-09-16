@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { tick } from 'svelte'
   import type { Puzzle } from '../types/puzzle'
-  import { game, loadPuzzle, isSolved, fetchPuzzleIndex, fetchPuzzleById } from '../lib/state.svelte'
+  import { game, loadPuzzle, isSolved, submitAnswers, isCellLocked, isCellIncorrect, clearIncorrectStatus, fetchPuzzleIndex, fetchPuzzleById } from '../lib/state.svelte'
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -51,7 +51,75 @@
   })
 
   function setEntry(index: number, value: string) {
-    game.state.entries[index] = value
+    if (isCellLocked(index)) return // Don't allow editing locked cells
+    
+    const revealed = game.state.reveals[index] ?? ''
+    const revealedLength = revealed.length
+    
+    // Only allow user to edit the part after revealed letters
+    if (value.length < revealedLength) {
+      // User is trying to delete revealed letters - don't allow it
+      return
+    }
+    
+    // Extract only the user input part (after revealed letters)
+    const userInput = value.slice(revealedLength)
+    game.state.entries[index] = userInput
+    clearIncorrectStatus(index) // Clear red border when user types
+  }
+
+  function handleSubmit() {
+    const solved = submitAnswers()
+    if (solved) {
+      // Puzzle is solved - could show celebration or navigate to next puzzle
+      console.log('Puzzle solved!')
+    }
+    
+    // Always focus on the first unsolved cell from the top (left to right)
+    focusFirstUnsolvedCell()
+    
+    // Force a re-render to ensure visual changes appear immediately
+    game.state = { ...game.state }
+  }
+
+  function focusFirstUnsolvedCell() {
+    if (!game.puzzle) return
+    
+    const { solutions } = game.puzzle
+    
+    // Find the first unsolved cell from the top
+    for (let cellIndex = 0; cellIndex < game.puzzle.grid.cells.length; cellIndex++) {
+      const cell = game.puzzle.grid.cells[cellIndex]
+      
+      // Skip if it's a fixed cell (these are not input cells)
+      if (cell.fixed) continue
+      
+      // Skip if it's not used in the puzzle (no solution and no arrows)
+      if (!isCellUsed(cellIndex)) continue
+      
+      // Skip if it's already locked (solved)
+      if (isCellLocked(cellIndex)) continue
+      
+      // Skip if it doesn't have a solution (shouldn't happen, but safety check)
+      if (!solutions[cellIndex]) continue
+      
+      // Found the first unsolved cell - focus it
+      focusCell(cellIndex)
+      setTimeout(() => {
+        const input = document.querySelector(`input[data-cell-index="${cellIndex}"]`) as HTMLInputElement
+        input?.focus()
+      }, 0)
+      return
+    }
+    
+    // If no unsolved cells found, clear focus
+    game.state.focusedCell = null
+    setTimeout(() => {
+      const activeElement = document.activeElement as HTMLElement
+      if (activeElement && activeElement.blur) {
+        activeElement.blur()
+      }
+    }, 0)
   }
 
   function focusCell(index: number) {
@@ -102,11 +170,27 @@
     if (cell.fixed) return
     const solution = game.puzzle.solutions[i]
     if (!solution) return
-    const current = game.state.entries[i] ?? ''
-    const nextLen = Math.min(current.length + 1, solution.length)
-    const next = solution.slice(0, nextLen)
-    game.state.entries[i] = next
-    game.state.reveals[i] = next
+    
+    const currentRevealed = game.state.reveals[i] ?? ''
+    const nextLen = Math.min(currentRevealed.length + 1, solution.length)
+    const nextRevealed = solution.slice(0, nextLen)
+    
+    // Clear any existing user input when revealing letters
+    game.state.entries[i] = undefined
+    game.state.reveals[i] = nextRevealed
+    clearIncorrectStatus(i) // Clear any red border
+  }
+
+  // Get the display value for a cell (revealed letters + user input)
+  function getDisplayValue(index: number): string {
+    const revealed = game.state.reveals[index] ?? ''
+    const userInput = game.state.entries[index] ?? ''
+    return revealed + userInput
+  }
+
+  // Check if a cell has revealed letters
+  function hasRevealedLetters(index: number): boolean {
+    return (game.state.reveals[index]?.length ?? 0) > 0
   }
 
   // Arrow overlay measurements
@@ -235,14 +319,40 @@
               </div>
             {:else}
               <input
-                class={`cell empty entry ${game.state.focusedCell === i ? 'focused' : ''}`}
+                class={`cell empty entry ${game.state.focusedCell === i ? 'focused' : ''} ${isCellLocked(i) ? 'locked' : ''} ${isCellIncorrect(i) ? 'incorrect' : ''}`}
                 type="text"
                 placeholder={cell.hint ?? ''}
-                value={game.state.entries[i] ?? ''}
+                value={getDisplayValue(i)}
                 data-cell-index={i}
+                disabled={isCellLocked(i)}
                 on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
-                on:focus={() => focusCell(i)}
+                on:focus={(e) => {
+                  focusCell(i)
+                  // Position cursor after revealed letters
+                  const revealedLength = (game.state.reveals[i]?.length ?? 0)
+                  setTimeout(() => {
+                    const input = e.target as HTMLInputElement
+                    input.setSelectionRange(revealedLength, revealedLength)
+                  }, 0)
+                }}
                 on:keydown={(e) => {
+                  if (isCellLocked(i)) return // Don't allow navigation for locked cells
+                  
+                  const revealedLength = (game.state.reveals[i]?.length ?? 0)
+                  const cursorPos = (e.target as HTMLInputElement).selectionStart ?? 0
+                  
+                  // Prevent cursor from going before revealed letters
+                  if (e.key === 'ArrowLeft' && cursorPos <= revealedLength) {
+                    e.preventDefault()
+                    return
+                  }
+                  
+                  // Prevent backspace from deleting revealed letters
+                  if (e.key === 'Backspace' && cursorPos <= revealedLength) {
+                    e.preventDefault()
+                    return
+                  }
+                  
                   if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); goNext() }
                   if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
                   if (e.key === 'Tab') {
@@ -267,7 +377,11 @@
 
       <div class="toolbar">
         <button on:click={revealLetter}>Reveal letter</button>
-        <span class="status">{isSolved() ? 'Solved ✅' : 'Keep going…'}</span>
+        {#if isSolved()}
+          <span class="status">Solved ✅</span>
+        {:else}
+          <button on:click={handleSubmit} class="submit-btn">Submit</button>
+        {/if}
       </div>
     {:else}
       <p>Loading…</p>
@@ -340,6 +454,34 @@
     outline: none;
     background: transparent;
   }
+  .entry.locked {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+    font-weight: bold;
+  }
+  .entry.incorrect {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+  }
+  .entry:disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+  
+  /* Style for cells with revealed letters */
+  .entry:has(+ .revealed-indicator) {
+    position: relative;
+  }
+  
+  .revealed-indicator {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 10px;
+    color: #10b981;
+    font-weight: bold;
+    pointer-events: none;
+  }
   .toolbar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
   .toolbar button {
     padding: 8px 16px;
@@ -360,6 +502,15 @@
     background: #f3f4f6;
     transform: translateY(1px);
   }
+  .submit-btn {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+  }
+  .submit-btn:hover {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+  }
   .status { color: #666; }
   @media (prefers-color-scheme: dark) {
     .subtitle { color: #aaa; }
@@ -370,6 +521,14 @@
       background: transparent; 
       color: inherit; 
       border-color: #555;
+    }
+    .entry.locked {
+      border-color: #10b981;
+      background-color: #064e3b;
+    }
+    .entry.incorrect {
+      border-color: #ef4444;
+      background-color: #7f1d1d;
     }
     .byline { color: #aaa; }
     .status { color: #aaa; }

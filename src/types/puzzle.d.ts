@@ -36,6 +36,12 @@ export type GameState = {
   /** revealed letters by cell; simple string mask for now */
   reveals: Record<number, string | undefined>
   focusedCell: number | null
+  /** cells that are locked after correct submission */
+  lockedCells: Set<number>
+  /** cells that have incorrect entries (for red border) */
+  incorrectCells: Set<number>
+  /** number of submission attempts */
+  attempts: number
 }
 
 
