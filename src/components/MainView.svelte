@@ -147,6 +147,22 @@
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', onResize)
   }
+
+  // Determine if a cell is used in the puzzle
+  function isCellUsed(index: number): boolean {
+    if (!game.puzzle) return false
+    const cell = game.puzzle.grid.cells[index]
+    if (!cell) return false
+    
+    // Cell is used if it has fixed content, solution, or is connected via arrows
+    if (cell.fixed) return true
+    if (game.puzzle.solutions[index]) return true
+    
+    // Check if this cell is connected to any arrows
+    const hasArrowFrom = game.puzzle.grid.arrows.some(a => a.from === index)
+    const hasArrowTo = game.puzzle.grid.arrows.some(a => a.to === index)
+    return hasArrowFrom || hasArrowTo
+  }
 </script>
 
 <div class="app">
@@ -196,35 +212,30 @@
           style={`grid-template-columns: repeat(${game.puzzle.grid.cols}, 1fr);`}
         >
         {#each game.puzzle.grid.cells as cell, i}
-          {#if cell.fixed}
-            <div class={`cell fixed ${game.state.focusedCell === i ? 'focused' : ''}`} use:collectEl={i}>
-              <span class="fixed-text">{cell.fixed}</span>
-            </div>
+          {#if isCellUsed(i)}
+            {#if cell.fixed}
+              <div class={`cell fixed ${game.state.focusedCell === i ? 'focused' : ''}`} use:collectEl={i}>
+                <span class="fixed-text">{cell.fixed}</span>
+              </div>
+            {:else}
+              <div class={`cell empty ${game.state.focusedCell === i ? 'focused' : ''}`} use:collectEl={i}>
+                <input
+                  class="entry"
+                  type="text"
+                  placeholder={cell.hint ?? ''}
+                  value={game.state.entries[i] ?? ''}
+                  on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
+                  on:focus={() => focusCell(i)}
+                  on:keydown={(e) => {
+                    if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'Tab') { e.preventDefault(); goNext() }
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
+                  }}
+                />
+              </div>
+            {/if}
           {:else}
-            <button
-              type="button"
-              class={`cell empty ${game.state.focusedCell === i ? 'focused' : ''}`}
-              aria-label={`Cell ${i + 1}`}
-              on:click={() => focusCell(i)}
-              on:keydown={(e) => {
-                if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
-                if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); goNext() }
-              }}
-              use:collectEl={i}
-            >
-              <input
-                class="entry"
-                type="text"
-                placeholder={cell.hint ?? ''}
-                value={game.state.entries[i] ?? ''}
-                on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
-                on:focus={() => focusCell(i)}
-                on:keydown={(e) => {
-                  if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'Tab') { e.preventDefault(); goNext() }
-                  if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
-                }}
-              />
-            </button>
+            <!-- Unused cell - invisible but still takes up grid space for arrow positioning -->
+            <div class="cell unused" use:collectEl={i}></div>
           {/if}
         {/each}
         </div>
@@ -278,6 +289,11 @@
     justify-content: center;
     background: var(--cell-bg, transparent);
   }
+  .cell.unused {
+    border: none;
+    background: transparent;
+    visibility: hidden;
+  }
   .cell.fixed {
     --cell-bg: rgba(0,0,0,0.04);
   }
@@ -288,9 +304,12 @@
   .fixed-text { font-weight: 600; }
   .entry {
     width: 100%;
+    height: 100%;
     padding: 8px 10px;
-    border: 1px solid #ccc;
+    border: none;
     border-radius: 6px;
+    background: transparent;
+    font: inherit;
   }
   .toolbar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
   .status { color: #666; }
@@ -299,7 +318,7 @@
     main { border-top-color: #333; }
     .cell { border-color: #333; }
     .cell.fixed { --cell-bg: rgba(255,255,255,0.04); }
-    .entry { background: transparent; border-color: #444; color: inherit; }
+    .entry { background: transparent; color: inherit; }
     .byline { color: #aaa; }
     .status { color: #aaa; }
   }
