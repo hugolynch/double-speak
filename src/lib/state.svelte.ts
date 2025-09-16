@@ -21,10 +21,45 @@ export function loadPuzzle(puzzle: Puzzle) {
 }
 
 export async function fetchPuzzleIndex(): Promise<void> {
-  const res = await fetch(`${import.meta.env.BASE_URL ?? '/'}puzzles/index.json`)
-  if (!res.ok) throw new Error(`Failed to load puzzle index: ${res.status}`)
-  const data = await res.json()
-  game.index = Array.isArray(data) ? data : []
+  // Fetch list of puzzle files from a simple list.json file
+  const base = import.meta.env.BASE_URL ?? '/'
+  const discoveredPuzzles: { id: string; date: string; title?: string; author?: string }[] = []
+  
+  try {
+    // First, get the list of puzzle files
+    const listRes = await fetch(`${base}puzzles/list.json`)
+    if (!listRes.ok) {
+      console.warn('No puzzle list found, using empty list')
+      game.index = []
+      return
+    }
+    
+    const puzzleFiles = await listRes.json() as string[]
+    
+    // Then load each puzzle file to get metadata
+    for (const filename of puzzleFiles) {
+      try {
+        const res = await fetch(`${base}puzzles/${filename}`)
+        if (res.ok) {
+          const puzzle = await res.json()
+          discoveredPuzzles.push({
+            id: puzzle.id || filename.replace('.json', ''),
+            date: puzzle.date || filename.replace('.json', ''),
+            title: puzzle.title,
+            author: puzzle.author
+          })
+        }
+      } catch (err) {
+        console.warn(`Failed to load puzzle ${filename}:`, err)
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch puzzle list:', err)
+  }
+  
+  // Sort by date (newest first)
+  discoveredPuzzles.sort((a, b) => b.date.localeCompare(a.date))
+  game.index = discoveredPuzzles
 }
 
 export async function fetchPuzzleById(id: string): Promise<void> {

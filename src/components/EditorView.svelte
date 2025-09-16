@@ -87,6 +87,15 @@
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
+    
+    // Also download an updated list.json for easy deployment
+    downloadPuzzleList()
+  }
+  
+  function downloadPuzzleList() {
+    // This would need to be updated manually or via a build script
+    // For now, just show a reminder
+    console.log('Remember to update public/puzzles/list.json with the new puzzle filename')
   }
 
   async function copyJSON() {
