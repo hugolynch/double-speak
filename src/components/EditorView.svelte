@@ -10,16 +10,34 @@
 
   type EditCell = { fixed?: string, isFixed: boolean, right: boolean, down: boolean }
   let cells: EditCell[] = Array.from({ length: rows * cols }, () => ({ isFixed: false, right: false, down: false }))
+  
 
   function applySize(newRows: number, newCols: number) {
+    const oldRows = rows
+    const oldCols = cols
     rows = Math.max(1, Math.min(12, Math.floor(newRows)))
     cols = Math.max(1, Math.min(12, Math.floor(newCols)))
+    
     const nextTotal = rows * cols
     const next: EditCell[] = new Array(nextTotal)
+    
+    // Preserve existing cells in their relative positions
     for (let i = 0; i < nextTotal; i++) {
-      next[i] = cells[i] ?? { isFixed: false, right: false, down: false }
+      const newRow = Math.floor(i / cols)
+      const newCol = i % cols
+      const oldIndex = newRow * oldCols + newCol
+      
+      if (oldIndex < cells.length && newRow < oldRows && newCol < oldCols) {
+        // Cell exists in both old and new grids, preserve it
+        next[i] = cells[oldIndex] ?? { isFixed: false, right: false, down: false }
+      } else {
+        // New cell, initialize as empty
+        next[i] = { isFixed: false, right: false, down: false }
+      }
     }
+    
     cells = next
+    
     // Clear invalid directional toggles at new edges
     for (let i = 0; i < cells.length; i++) {
       const atRightEdge = (i % cols) === cols - 1
@@ -55,25 +73,97 @@
     return arrows
   }
 
-  function buildPuzzle(): Puzzle {
-    const grid: Grid = {
-      rows,
-      cols,
-      cells: cells.map((c) => (c.isFixed && c.fixed ? { fixed: c.fixed } : {})),
-      arrows: deriveArrows(),
+  // Detect which rows and columns are actually used
+  function getUsedBounds() {
+    let minRow = rows, maxRow = -1, minCol = cols, maxCol = -1
+    
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i]
+      if (cell.isFixed || cell.fixed || cell.right || cell.down) {
+        const row = Math.floor(i / cols)
+        const col = i % cols
+        minRow = Math.min(minRow, row)
+        maxRow = Math.max(maxRow, row)
+        minCol = Math.min(minCol, col)
+        maxCol = Math.max(maxCol, col)
+      }
     }
-    const solutions: Record<number, string> = {}
-    cells.forEach((c, i) => {
-      if (!c.isFixed && c.fixed) solutions[i] = c.fixed
-    })
+    
+    return {
+      minRow: minRow === rows ? 0 : minRow,
+      maxRow: maxRow === -1 ? 0 : maxRow,
+      minCol: minCol === cols ? 0 : minCol,
+      maxCol: maxCol === -1 ? 0 : maxCol
+    }
+  }
+
+  // Trim grid to remove unused rows and columns
+  function trimGrid() {
+    const bounds = getUsedBounds()
+    const trimmedRows = bounds.maxRow - bounds.minRow + 1
+    const trimmedCols = bounds.maxCol - bounds.minCol + 1
+    
+    const trimmedCells: EditCell[] = []
+    const trimmedSolutions: Record<number, string> = {}
+    
+    for (let newRow = 0; newRow < trimmedRows; newRow++) {
+      for (let newCol = 0; newCol < trimmedCols; newCol++) {
+        const oldRow = bounds.minRow + newRow
+        const oldCol = bounds.minCol + newCol
+        const oldIndex = oldRow * cols + oldCol
+        const newIndex = newRow * trimmedCols + newCol
+        
+        const oldCell = cells[oldIndex]
+        if (oldCell) {
+          trimmedCells[newIndex] = { ...oldCell }
+          if (!oldCell.isFixed && oldCell.fixed) {
+            trimmedSolutions[newIndex] = oldCell.fixed
+          }
+        } else {
+          trimmedCells[newIndex] = { isFixed: false, right: false, down: false }
+        }
+      }
+    }
+    
+    return {
+      rows: trimmedRows,
+      cols: trimmedCols,
+      cells: trimmedCells,
+      solutions: trimmedSolutions
+    }
+  }
+
+  function buildPuzzle(): Puzzle {
+    const trimmed = trimGrid()
+    
+    const grid: Grid = {
+      rows: trimmed.rows,
+      cols: trimmed.cols,
+      cells: trimmed.cells.map((c) => (c.isFixed && c.fixed ? { fixed: c.fixed } : {})),
+      arrows: deriveArrowsForTrimmed(trimmed.rows, trimmed.cols, trimmed.cells),
+    }
+    
     return {
       id: meta.id || meta.date,
       date: meta.date,
       title: meta.title || undefined,
       author: meta.author || undefined,
       grid,
-      solutions,
+      solutions: trimmed.solutions,
     }
+  }
+
+  // Derive arrows for trimmed grid
+  function deriveArrowsForTrimmed(trimmedRows: number, trimmedCols: number, trimmedCells: EditCell[]) {
+    const arrows: Arrow[] = []
+    for (let i = 0; i < trimmedCells.length; i++) {
+      const r = Math.floor(i / trimmedCols)
+      const c = i % trimmedCols
+      const cell = trimmedCells[i]
+      if (cell.right && c < trimmedCols - 1) arrows.push({ from: i, to: i + 1, dir: 'right' })
+      if (cell.down && r < trimmedRows - 1) arrows.push({ from: i, to: i + trimmedCols, dir: 'down' })
+    }
+    return arrows
   }
 
   function downloadJSON() {
@@ -101,6 +191,39 @@
   async function copyJSON() {
     const data = buildPuzzle()
     await navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+  }
+
+  // Auto-trim the grid to remove unused rows and columns
+  function autoTrim() {
+    const bounds = getUsedBounds()
+    if (bounds.minRow > 0 || bounds.maxRow < rows - 1 || bounds.minCol > 0 || bounds.maxCol < cols - 1) {
+      const trimmedRows = bounds.maxRow - bounds.minRow + 1
+      const trimmedCols = bounds.maxCol - bounds.minCol + 1
+      
+      // Create trimmed cells array
+      const trimmedCells: EditCell[] = []
+      for (let newRow = 0; newRow < trimmedRows; newRow++) {
+        for (let newCol = 0; newCol < trimmedCols; newCol++) {
+          const oldRow = bounds.minRow + newRow
+          const oldCol = bounds.minCol + newCol
+          const oldIndex = oldRow * cols + oldCol
+          const newIndex = newRow * trimmedCols + newCol
+          
+          const oldCell = cells[oldIndex]
+          if (oldCell) {
+            trimmedCells[newIndex] = { ...oldCell }
+          } else {
+            trimmedCells[newIndex] = { isFixed: false, right: false, down: false }
+          }
+        }
+      }
+      
+      // Update the grid
+      rows = trimmedRows
+      cols = trimmedCols
+      cells = trimmedCells
+      measureArrows()
+    }
   }
 
   // Import JSON
@@ -208,6 +331,7 @@
     <div class="controls">
       <label>Rows <input type="number" min="1" max="12" value={rows} on:input={(e) => handleRowsInput((e.target as HTMLInputElement).value)} /></label>
       <label>Cols <input type="number" min="1" max="12" value={cols} on:input={(e) => handleColsInput((e.target as HTMLInputElement).value)} /></label>
+      <button on:click={autoTrim}>Auto-trim unused</button>
     </div>
   </div>
 
@@ -418,6 +542,9 @@
     text-align: center;
     font-size: 14px;
   }
+  .tile.fixed .word {
+    font-weight: bold;
+  }
   .controls {
     display: flex;
     align-items: center;
@@ -427,11 +554,14 @@
   .lock-btn {
     background: #ffffff;
     border: 1px solid #d1d5db;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 4px 8px;
     border-radius: 4px;
     transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .lock-btn:hover {
     background: #f9fafb;
@@ -471,7 +601,14 @@
     .tile { border-color: #444; }
     .tile.fixed { background-color: #2a2a2a; }
     .dirs { color: #aaa; }
-    .word { background: transparent; border-color: #444; color: inherit; }
+    .word { 
+      background: transparent; 
+      border-color: #444; 
+      color: inherit; 
+    }
+    .tile.fixed .word {
+      font-weight: bold;
+    }
     .sep { background: #374151; }
     .arrows { color: #777; }
     label { color: #f9fafb; }

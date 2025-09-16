@@ -64,7 +64,15 @@
     let i = game.state.focusedCell ?? 0
     for (let step = 0; step < cells.length; step++) {
       i = (i - 1 + cells.length) % cells.length
-      if (!cells[i].fixed) { game.state.focusedCell = i; return }
+      if (isCellUsed(i) && !cells[i].fixed) { 
+        game.state.focusedCell = i
+        // Focus the actual input element
+        setTimeout(() => {
+          const input = document.querySelector(`input[data-cell-index="${i}"]`) as HTMLInputElement
+          input?.focus()
+        }, 0)
+        return 
+      }
     }
   }
 
@@ -74,7 +82,15 @@
     let i = game.state.focusedCell ?? 0
     for (let step = 0; step < cells.length; step++) {
       i = (i + 1) % cells.length
-      if (!cells[i].fixed) { game.state.focusedCell = i; return }
+      if (isCellUsed(i) && !cells[i].fixed) { 
+        game.state.focusedCell = i
+        // Focus the actual input element
+        setTimeout(() => {
+          const input = document.querySelector(`input[data-cell-index="${i}"]`) as HTMLInputElement
+          input?.focus()
+        }, 0)
+        return 
+      }
     }
   }
 
@@ -223,11 +239,20 @@
                 type="text"
                 placeholder={cell.hint ?? ''}
                 value={game.state.entries[i] ?? ''}
+                data-cell-index={i}
                 on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
                 on:focus={() => focusCell(i)}
                 on:keydown={(e) => {
-                  if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'Tab') { e.preventDefault(); goNext() }
+                  if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); goNext() }
                   if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
+                  if (e.key === 'Tab') {
+                    e.preventDefault()
+                    if (e.shiftKey) {
+                      goPrev()
+                    } else {
+                      goNext()
+                    }
+                  }
                 }}
                 use:collectEl={i}
               />
@@ -241,8 +266,6 @@
       </div>
 
       <div class="toolbar">
-        <button on:click={goPrev}>Prev</button>
-        <button on:click={goNext}>Next</button>
         <button on:click={revealLetter}>Reveal letter</button>
         <span class="status">{isSolved() ? 'Solved ✅' : 'Keep going…'}</span>
       </div>
