@@ -16,5 +16,5 @@ npm run build
 npm run preview
 ```
 
-- Production base: `/double-speak/` (see `vite.config.ts`).
+- Production base: `/waterfalls/` (see `vite.config.ts`).
 - Types live under `src/types`. State uses Svelte runes in `src/lib/state.svelte.ts`.
