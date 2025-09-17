@@ -444,7 +444,7 @@
     --cell-bg: rgba(0,0,0,0.04);
   }
   .cell.focused {
-    outline: 2px solid #4f46e5;
+    outline: 2px solid #414141;
     outline-offset: -2px;
   }
   .fixed-text { 
@@ -518,13 +518,13 @@
     transform: translateY(1px);
   }
   .submit-btn {
-    background: #3b82f6 !important;
-    border-color: #3b82f6 !important;
+    background: #414141 !important;
+    border-color: #414141 !important;
     color: #ffffff !important;
   }
   .submit-btn:hover {
-    background: #2563eb !important;
-    border-color: #2563eb !important;
+    background: #2A2A2A !important;
+    border-color: #2A2A2A !important;
   }
   .status { color: #666; }
   @media (prefers-color-scheme: dark) {
