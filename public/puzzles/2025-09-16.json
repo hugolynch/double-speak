@@ -4,9 +4,15 @@
   "title": "Daylight savings",
   "author": "Hugo",
   "grid": {
-    "rows": 4,
-    "cols": 3,
+    "rows": 5,
+    "cols": 4,
     "cells": [
+      {},
+      {
+        "fixed": "family"
+      },
+      {},
+      {},
       {
         "fixed": "fall"
       },
@@ -17,6 +23,10 @@
       {},
       {},
       {},
+      {},
+      {
+        "fixed": "break"
+      },
       {
         "fixed": "and forth"
       },
@@ -25,35 +35,17 @@
         "fixed": "forward"
       },
       {},
+      {},
       {
         "fixed": "time"
       },
+      {},
       {}
     ],
     "arrows": [
       {
-        "from": 0,
-        "to": 1,
-        "dir": "right"
-      },
-      {
-        "from": 0,
-        "to": 3,
-        "dir": "down"
-      },
-      {
         "from": 1,
-        "to": 2,
-        "dir": "right"
-      },
-      {
-        "from": 3,
-        "to": 4,
-        "dir": "right"
-      },
-      {
-        "from": 3,
-        "to": 6,
+        "to": 5,
         "dir": "down"
       },
       {
@@ -63,26 +55,56 @@
       },
       {
         "from": 4,
-        "to": 7,
-        "dir": "down"
-      },
-      {
-        "from": 5,
         "to": 8,
         "dir": "down"
       },
       {
-        "from": 7,
+        "from": 5,
+        "to": 6,
+        "dir": "right"
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "dir": "right"
+      },
+      {
+        "from": 8,
+        "to": 12,
+        "dir": "down"
+      },
+      {
+        "from": 9,
         "to": 10,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 13,
+        "dir": "down"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 14,
+        "dir": "down"
+      },
+      {
+        "from": 13,
+        "to": 17,
         "dir": "down"
       }
     ]
   },
   "solutions": {
-    "1": "guy",
-    "3": "back",
-    "4": "hand",
-    "5": "spring",
-    "7": "over"
+    "5": "guy",
+    "8": "back",
+    "9": "hand",
+    "10": "spring",
+    "13": "over"
   }
 }

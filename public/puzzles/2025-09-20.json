@@ -4,11 +4,19 @@
   "title": "Look out!",
   "author": "Hugo",
   "grid": {
-    "rows": 3,
+    "rows": 4,
     "cols": 4,
     "cells": [
+      {},
       {
-        "fixed": "black"
+        "fixed": "snow"
+      },
+      {
+        "fixed": "side"
+      },
+      {},
+      {
+        "fixed": "bulletin"
       },
       {},
       {},
@@ -34,24 +42,14 @@
     ],
     "arrows": [
       {
-        "from": 0,
-        "to": 1,
-        "dir": "right"
-      },
-      {
-        "from": 1,
-        "to": 2,
-        "dir": "right"
-      },
-      {
         "from": 1,
         "to": 5,
         "dir": "down"
       },
       {
         "from": 2,
-        "to": 3,
-        "dir": "right"
+        "to": 6,
+        "dir": "down"
       },
       {
         "from": 4,
@@ -82,14 +80,34 @@
         "from": 9,
         "to": 10,
         "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 13,
+        "dir": "down"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "dir": "right"
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "dir": "right"
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "dir": "right"
       }
     ]
   },
   "solutions": {
-    "1": "board",
-    "2": "walk",
-    "5": "game",
-    "6": "show",
-    "9": "theory"
+    "5": "board",
+    "6": "walk",
+    "9": "game",
+    "10": "show",
+    "13": "theory"
   }
 }

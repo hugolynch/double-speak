@@ -60,6 +60,67 @@
     applySize(rows, n)
   }
 
+  // Insert a row at the top
+  function insertRowAtTop() {
+    if (rows >= 12) return // Max rows limit
+    const newRows = rows + 1
+    const newCells: EditCell[] = new Array(newRows * cols)
+    
+    // Fill the first row with empty cells
+    for (let i = 0; i < cols; i++) {
+      newCells[i] = { isFixed: false, right: false, down: false }
+    }
+    
+    // Copy existing cells, shifting them down by one row
+    for (let i = 0; i < cells.length; i++) {
+      const oldRow = Math.floor(i / cols)
+      const oldCol = i % cols
+      const newIndex = (oldRow + 1) * cols + oldCol
+      newCells[newIndex] = cells[i]
+    }
+    
+    rows = newRows
+    cells = newCells
+    measureArrows()
+  }
+
+  // Insert a row at the bottom
+  function insertRowAtBottom() {
+    if (rows >= 12) return // Max rows limit
+    applySize(rows + 1, cols)
+  }
+
+  // Insert a column at the left
+  function insertColumnAtLeft() {
+    if (cols >= 12) return // Max cols limit
+    const newCols = cols + 1
+    const newCells: EditCell[] = new Array(rows * newCols)
+    
+    // Copy existing cells, shifting them right by one column
+    for (let i = 0; i < cells.length; i++) {
+      const oldRow = Math.floor(i / cols)
+      const oldCol = i % cols
+      const newIndex = oldRow * newCols + (oldCol + 1)
+      newCells[newIndex] = cells[i]
+    }
+    
+    // Fill the first column with empty cells
+    for (let row = 0; row < rows; row++) {
+      const index = row * newCols
+      newCells[index] = { isFixed: false, right: false, down: false }
+    }
+    
+    cols = newCols
+    cells = newCells
+    measureArrows()
+  }
+
+  // Insert a column at the right
+  function insertColumnAtRight() {
+    if (cols >= 12) return // Max cols limit
+    applySize(rows, cols + 1)
+  }
+
   // Build arrows and puzzle JSON
   function deriveArrows(): Arrow[] {
     const arrows: Arrow[] = []
@@ -333,6 +394,23 @@
       <label>Cols <input type="number" min="1" max="12" value={cols} on:input={(e) => handleColsInput((e.target as HTMLInputElement).value)} /></label>
       <button on:click={autoTrim}>Auto-trim unused</button>
     </div>
+
+    <div class="insert-controls">
+      <div class="insert-section">
+        <h4>Insert Rows</h4>
+        <div class="insert-buttons">
+          <button on:click={insertRowAtTop} disabled={rows >= 12} title="Insert row at top">+ Top</button>
+          <button on:click={insertRowAtBottom} disabled={rows >= 12} title="Insert row at bottom">+ Bottom</button>
+        </div>
+      </div>
+      <div class="insert-section">
+        <h4>Insert Columns</h4>
+        <div class="insert-buttons">
+          <button on:click={insertColumnAtLeft} disabled={cols >= 12} title="Insert column at left">+ Left</button>
+          <button on:click={insertColumnAtRight} disabled={cols >= 12} title="Insert column at right">+ Right</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="grid-wrap" bind:this={gridWrapEl}>
@@ -427,6 +505,45 @@
     width: 100%;
   }
   .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  
+  .insert-controls {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .insert-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .insert-section h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  .insert-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .insert-buttons button {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 60px;
+  }
+  
+  .insert-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   label { 
     display: inline-flex; 
     align-items: center; 
@@ -668,6 +785,15 @@
     .dirs label:hover {
       background: #374151;
       border-color: #4b5563;
+    }
+    
+    .insert-controls {
+      background: #1f2937;
+      border-color: #374151;
+    }
+    
+    .insert-section h4 {
+      color: #f9fafb;
     }
   }
 </style>

@@ -4,9 +4,15 @@
   "title": "Talk to me, baby",
   "author": "Hugo",
   "grid": {
-    "rows": 3,
+    "rows": 5,
     "cols": 4,
     "cells": [
+      {},
+      {},
+      {
+        "fixed": "gift"
+      },
+      {},
       {
         "fixed": "baby"
       },
@@ -30,29 +36,15 @@
       {},
       {
         "fixed": "animal"
-      }
+      },
+      {},
+      {},
+      {
+        "fixed": "pooper"
+      },
+      {}
     ],
     "arrows": [
-      {
-        "from": 0,
-        "to": 1,
-        "dir": "right"
-      },
-      {
-        "from": 1,
-        "to": 2,
-        "dir": "right"
-      },
-      {
-        "from": 1,
-        "to": 5,
-        "dir": "down"
-      },
-      {
-        "from": 2,
-        "to": 3,
-        "dir": "right"
-      },
       {
         "from": 2,
         "to": 6,
@@ -61,6 +53,11 @@
       {
         "from": 4,
         "to": 5,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 6,
         "dir": "right"
       },
       {
@@ -79,17 +76,42 @@
         "dir": "down"
       },
       {
+        "from": 8,
+        "to": 9,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 13,
+        "dir": "down"
+      },
+      {
         "from": 10,
         "to": 11,
         "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 14,
+        "dir": "down"
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "dir": "right"
+      },
+      {
+        "from": 14,
+        "to": 18,
+        "dir": "down"
       }
     ]
   },
   "solutions": {
-    "1": "boom",
-    "2": "box",
-    "5": "town",
-    "6": "office",
-    "10": "party"
+    "5": "boom",
+    "6": "box",
+    "9": "town",
+    "10": "office",
+    "14": "party"
   }
 }
