@@ -489,8 +489,8 @@
   header { margin-bottom: 16px; }
   .header-content { display: flex; align-items: baseline; gap: 12px; }
   .logo { height: 40px; width: auto; }
-  .header-text { display: flex; align-items: baseline; gap: 12px; }
-  .subtitle { color: #00AFB6; margin: 0; font-size: 16px;}
+  .header-text { display: flex; align-items: baseline; gap: 12px; margin-bottom: -10px; }
+  .subtitle { color: #00AFB6; margin: 0; font-size: 16px; }
   
   .editor-sections {
     display: flex;
