@@ -1,0 +1,112 @@
+{
+  "id": "2025-09-17",
+  "date": "2025-09-17",
+  "title": "Bullet points",
+  "author": "Hugo",
+  "grid": {
+    "rows": 5,
+    "cols": 3,
+    "cells": [
+      {
+        "fixed": "time"
+      },
+      {},
+      {},
+      {},
+      {},
+      {
+        "fixed": "for hire"
+      },
+      {
+        "fixed": "learning"
+      },
+      {},
+      {
+        "fixed": "wall"
+      },
+      {
+        "fixed": "crystal"
+      },
+      {},
+      {
+        "fixed": "and chain"
+      },
+      {
+        "fixed": "jurassic"
+      },
+      {},
+      {
+        "fixed": "bench"
+      }
+    ],
+    "arrows": [
+      {
+        "from": 0,
+        "to": 3,
+        "dir": "down"
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "dir": "right"
+      },
+      {
+        "from": 3,
+        "to": 6,
+        "dir": "down"
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "dir": "right"
+      },
+      {
+        "from": 4,
+        "to": 7,
+        "dir": "down"
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "dir": "right"
+      },
+      {
+        "from": 7,
+        "to": 10,
+        "dir": "down"
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 13,
+        "dir": "down"
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "dir": "right"
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "dir": "right"
+      }
+    ]
+  },
+  "solutions": {
+    "3": "machine",
+    "4": "gun",
+    "7": "fire",
+    "10": "ball",
+    "13": "park"
+  }
+}
