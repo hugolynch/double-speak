@@ -318,54 +318,62 @@
                 <span class="fixed-text">{cell.fixed}</span>
               </div>
             {:else}
-              <input
-                class={`cell empty entry ${game.state.focusedCell === i ? 'focused' : ''} ${isCellLocked(i) ? 'locked' : ''} ${isCellIncorrect(i) ? 'incorrect' : ''}`}
-                type="text"
-                placeholder={cell.hint ?? ''}
-                value={getDisplayValue(i)}
-                data-cell-index={i}
-                disabled={isCellLocked(i)}
-                on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
-                on:focus={(e) => {
-                  focusCell(i)
-                  // Position cursor after revealed letters
-                  const revealedLength = (game.state.reveals[i]?.length ?? 0)
-                  setTimeout(() => {
-                    const input = e.target as HTMLInputElement
-                    input.setSelectionRange(revealedLength, revealedLength)
-                  }, 0)
-                }}
-                on:keydown={(e) => {
-                  if (isCellLocked(i)) return // Don't allow navigation for locked cells
-                  
-                  const revealedLength = (game.state.reveals[i]?.length ?? 0)
-                  const cursorPos = (e.target as HTMLInputElement).selectionStart ?? 0
-                  
-                  // Prevent cursor from going before revealed letters
-                  if (e.key === 'ArrowLeft' && cursorPos <= revealedLength) {
-                    e.preventDefault()
-                    return
-                  }
-                  
-                  // Prevent backspace from deleting revealed letters
-                  if (e.key === 'Backspace' && cursorPos <= revealedLength) {
-                    e.preventDefault()
-                    return
-                  }
-                  
-                  if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); goNext() }
-                  if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
-                  if (e.key === 'Tab') {
-                    e.preventDefault()
-                    if (e.shiftKey) {
-                      goPrev()
-                    } else {
-                      goNext()
+              <div class="cell-container" use:collectEl={i}>
+                <input
+                  class={`cell empty entry ${game.state.focusedCell === i ? 'focused' : ''} ${isCellLocked(i) ? 'locked' : ''} ${isCellIncorrect(i) ? 'incorrect' : ''}`}
+                  type="text"
+                  placeholder={cell.hint ?? ''}
+                  value={getDisplayValue(i)}
+                  data-cell-index={i}
+                  disabled={isCellLocked(i)}
+                  on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
+                  on:focus={(e) => {
+                    focusCell(i)
+                    // Position cursor after revealed letters
+                    const revealedLength = (game.state.reveals[i]?.length ?? 0)
+                    setTimeout(() => {
+                      const input = e.target as HTMLInputElement
+                      input.setSelectionRange(revealedLength, revealedLength)
+                    }, 0)
+                  }}
+                  on:keydown={(e) => {
+                    if (isCellLocked(i)) return // Don't allow navigation for locked cells
+                    
+                    const revealedLength = (game.state.reveals[i]?.length ?? 0)
+                    const cursorPos = (e.target as HTMLInputElement).selectionStart ?? 0
+                    
+                    // Prevent cursor from going before revealed letters
+                    if (e.key === 'ArrowLeft' && cursorPos <= revealedLength) {
+                      e.preventDefault()
+                      return
                     }
-                  }
-                }}
-                use:collectEl={i}
-              />
+                    
+                    // Prevent backspace from deleting revealed letters
+                    if (e.key === 'Backspace' && cursorPos <= revealedLength) {
+                      e.preventDefault()
+                      return
+                    }
+                    
+                    if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); goNext() }
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
+                    if (e.key === 'Tab') {
+                      e.preventDefault()
+                      if (e.shiftKey) {
+                        goPrev()
+                      } else {
+                        goNext()
+                      }
+                    }
+                  }}
+                />
+                {#if hasRevealedLetters(i)}
+                  <div class="reveal-indicators">
+                    {#each Array.from({ length: (game.state.reveals[i]?.length ?? 0) }) as _}
+                      <div class="reveal-pip"></div>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
             {/if}
           {:else}
             <!-- Unused cell - invisible but still takes up grid space for arrow positioning -->
@@ -468,19 +476,26 @@
     opacity: 0.8;
   }
   
-  /* Style for cells with revealed letters */
-  .entry:has(+ .revealed-indicator) {
+  .cell-container {
     position: relative;
+    height: 72px;
+    width: 100%;
   }
   
-  .revealed-indicator {
+  .reveal-indicators {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    font-size: 10px;
-    color: #10b981;
-    font-weight: bold;
-    pointer-events: none;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+  }
+  
+  .reveal-pip {
+    width: 6px;
+    height: 6px;
+    background: #000000;
+    border-radius: 50%;
   }
   .toolbar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
   .toolbar button {
