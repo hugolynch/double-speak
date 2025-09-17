@@ -45,6 +45,9 @@
       } else if (!game.puzzle) {
         loadPuzzle(makeDemoPuzzle())
       }
+      
+      // Load saved state from localStorage
+      loadSavedState()
     } finally {
       measureArrows()
     }
@@ -66,6 +69,9 @@
     const userInput = value.slice(revealedLength)
     game.state.entries[index] = userInput
     clearIncorrectStatus(index) // Clear red border when user types
+    
+    // Save state to localStorage
+    saveState()
   }
 
   function handleSubmit() {
@@ -80,6 +86,9 @@
     
     // Force a re-render to ensure visual changes appear immediately
     game.state = { ...game.state }
+    
+    // Save state to localStorage (including locked cells)
+    saveState()
   }
 
   function focusFirstUnsolvedCell() {
@@ -179,6 +188,51 @@
     game.state.entries[i] = undefined
     game.state.reveals[i] = nextRevealed
     clearIncorrectStatus(i) // Clear any red border
+    
+    // Save state to localStorage
+    saveState()
+  }
+
+  function saveState() {
+    if (!game.puzzle) return
+    const state = {
+      puzzleId: game.puzzle.id,
+      entries: game.state.entries,
+      reveals: game.state.reveals,
+      focusedCell: game.state.focusedCell,
+      lockedCells: Array.from(game.state.lockedCells),
+      incorrectCells: Array.from(game.state.incorrectCells)
+    }
+    localStorage.setItem(`waterfalls-${game.puzzle.id}`, JSON.stringify(state))
+  }
+
+  function loadSavedState() {
+    if (!game.puzzle) return
+    const saved = localStorage.getItem(`waterfalls-${game.puzzle.id}`)
+    if (saved) {
+      try {
+        const state = JSON.parse(saved)
+        if (state.puzzleId === game.puzzle.id) {
+          game.state.entries = state.entries || {}
+          game.state.reveals = state.reveals || {}
+          game.state.focusedCell = state.focusedCell || null
+          game.state.lockedCells = new Set(state.lockedCells || [])
+          game.state.incorrectCells = new Set(state.incorrectCells || [])
+        }
+      } catch (e) {
+        console.warn('Failed to load saved state:', e)
+      }
+    }
+  }
+
+  function resetPuzzle() {
+    if (!game.puzzle) return
+    game.state.entries = {}
+    game.state.reveals = {}
+    game.state.focusedCell = null
+    game.state.lockedCells = new Set()
+    game.state.incorrectCells = new Set()
+    localStorage.removeItem(`waterfalls-${game.puzzle.id}`)
   }
 
   // Get the display value for a cell (revealed letters + user input)
@@ -263,38 +317,52 @@
     const hasArrowTo = game.puzzle.grid.arrows.some(a => a.to === index)
     return hasArrowFrom || hasArrowTo
   }
+
+  // Get the input cell number (1-based) for non-fixed cells
+  function getInputCellNumber(index: number): number | null {
+    if (!game.puzzle) return null
+    const cell = game.puzzle.grid.cells[index]
+    if (!cell || cell.fixed) return null
+    
+    // Count how many input cells come before this one
+    let inputCount = 0
+    for (let i = 0; i < index; i++) {
+      const prevCell = game.puzzle.grid.cells[i]
+      if (prevCell && !prevCell.fixed && isCellUsed(i)) {
+        inputCount++
+      }
+    }
+    return inputCount + 1
+  }
 </script>
 
 <div class="app">
   <header>
-    <h1>Double Speak</h1>
-    <p class="subtitle">{today}</p>
+    <div class="header-content">
+      <img src="/logo.svg" alt="Waterfalls" class="logo" />
+    </div>
   </header>
   <main>
+    <div class="picker">
+      <select
+        on:change={async (e) => {
+          const id = (e.target as HTMLSelectElement).value
+          await fetchPuzzleById(id)
+          // Load saved state for the new puzzle
+          loadSavedState()
+          await tick()
+          measureArrows()
+        }}
+        bind:value={game.selectedId}
+      >
+          {#each game.index as item}
+            <option value={item.id}>{item.date} · {item.title ?? item.id}</option>
+          {/each}
+        </select>
+    </div>
     {#if game.puzzle}
-      <div class="meta">
-        <div class="title">{game.puzzle.title ?? 'Daily puzzle'}</div>
-        <div class="byline">{game.puzzle.author ?? ''}</div>
-      </div>
 
-      <div class="picker">
-        <label>
-          Puzzle:
-          <select
-            on:change={async (e) => {
-              const id = (e.target as HTMLSelectElement).value
-              await fetchPuzzleById(id)
-              await tick()
-              measureArrows()
-            }}
-            bind:value={game.selectedId}
-          >
-            {#each game.index as item}
-              <option value={item.id}>{item.date} · {item.title ?? item.id}</option>
-            {/each}
-          </select>
-        </label>
-      </div>
+
 
       <div class="grid-wrap" bind:this={gridWrapEl}>
         <svg class="arrows" width={svgSize.width} height={svgSize.height} viewBox={`0 0 ${svgSize.width} ${svgSize.height}`} aria-hidden="true">
@@ -366,12 +434,18 @@
                     }
                   }}
                 />
+                {#if getInputCellNumber(i)}
+                  <div class="cell-number">{getInputCellNumber(i)}</div>
+                {/if}
                 {#if hasRevealedLetters(i)}
                   <div class="reveal-indicators">
                     {#each Array.from({ length: (game.state.reveals[i]?.length ?? 0) }) as _}
                       <div class="reveal-pip"></div>
                     {/each}
                   </div>
+                {/if}
+                {#if isCellLocked(i)}
+                  <div class="locked-star">✓</div>
                 {/if}
               </div>
             {/if}
@@ -384,9 +458,12 @@
       </div>
 
       <div class="toolbar">
-        <button on:click={revealLetter}>Reveal letter</button>
+        <button on:click={resetPuzzle} class="reset-btn">Reset puzzle</button>
+        {#if !isSolved()}
+          <button on:click={revealLetter}>Reveal letter</button>
+        {/if}
         {#if isSolved()}
-          <span class="status">Solved ✅</span>
+          <span class="status">Solved!</span>
         {:else}
           <button on:click={handleSubmit} class="submit-btn">Submit</button>
         {/if}
@@ -399,14 +476,42 @@
 
 <style>
   .app { max-width: 880px; margin: 0 auto; padding: 24px; }
-  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
-  h1 { font-size: 28px; margin: 0; }
-  .subtitle { color: #666; margin: 0; }
+  header { margin-bottom: 16px; }
+  .header-content { display: flex; align-items: baseline; gap: 12px; }
+  .logo { height: 40px; width: auto; }
+  .header-text { display: flex; align-items: baseline; gap: 12px; }
+  .subtitle { color: #666; margin: 0; font-size: 16px; }
   main { border-top: 1px solid #eee; padding-top: 16px; }
   .meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
   .title { font-weight: 600; }
-  .byline { color: #888; font-size: 14px; }
-  .picker { margin-bottom: 12px; }
+  .picker { 
+    margin-bottom: 16px; 
+    display: flex;
+    align-items: center;
+  }
+  
+  .picker select {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 200px;
+  }
+  
+  .picker select:focus {
+    outline: none;
+    border-color: #84D9DD;
+    box-shadow: 0 0 0 3px #F8FCFC;
+  }
+  
+  .picker select:hover {
+    border-color: #9ca3af;
+  }
 
   .grid {
     display: grid;
@@ -417,11 +522,10 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    color: #aaa;
+    color: #84D9DD;
   }
   .arrows line {
-    stroke: currentColor;
-    stroke-width: 2;
+    stroke: none;
   }
   .cell {
     height: 72px;
@@ -441,10 +545,13 @@
     visibility: hidden;
   }
   .cell.fixed {
-    --cell-bg: rgba(0,0,0,0.04);
+    --cell-bg: #C3EBED;
+    border-color: #84D9DD;
+    position: relative;
+    z-index: 10;
   }
   .cell.focused {
-    outline: 2px solid #414141;
+    outline: 3px solid #84D9DD;
     outline-offset: -2px;
   }
   .fixed-text { 
@@ -452,24 +559,30 @@
     text-align: center;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    text-transform: uppercase;
+    color: #003235;
   }
   .entry {
     text-align: center;
     font: inherit;
     width: 100%;
     height: 100%;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #84D9DD;
     outline: none;
-    background: transparent;
+    background: white;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 10;
   }
   .entry.locked {
-    border-color: #10b981;
-    background-color: #f0fdf4;
+    border-color: #84D9DD;
+    background-color: #E6F6F7;
     font-weight: bold;
+    color: black;
   }
   .entry.incorrect {
-    border-color: #ef4444;
-    background-color: #fef2f2;
+    border-color: #FFDBDA;
+    background-color: #FFF0EF;
   }
   .entry:disabled {
     cursor: not-allowed;
@@ -482,10 +595,20 @@
     width: 100%;
   }
   
-  .reveal-indicators {
+  .cell-number {
     position: absolute;
     top: 8px;
     left: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    line-height: 1;
+  }
+  
+  .reveal-indicators {
+    position: absolute;
+    top: 11px;
+    left: 20px;
     display: flex;
     gap: 2px;
     z-index: 10;
@@ -496,6 +619,16 @@
     height: 6px;
     background: #000000;
     border-radius: 50%;
+  }
+  
+  .locked-star {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 16px;
+    color: #00787D;
+    z-index: 10;
+    line-height: 1;
   }
   .toolbar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
   .toolbar button {
@@ -518,20 +651,24 @@
     transform: translateY(1px);
   }
   .submit-btn {
-    background: #414141 !important;
-    border-color: #414141 !important;
+    background: #009BA1 !important;
+    border-color: #009BA1 !important;
     color: #ffffff !important;
   }
   .submit-btn:hover {
-    background: #2A2A2A !important;
-    border-color: #2A2A2A !important;
+    background: #00787D !important;
+    border-color: #00787D !important;
   }
-  .status { color: #666; }
+
+  .status { color: #00787D; }
   @media (prefers-color-scheme: dark) {
     .subtitle { color: #aaa; }
     main { border-top-color: #333; }
     .cell { border-color: #333; }
-    .cell.fixed { --cell-bg: rgba(255,255,255,0.04); }
+    .cell.fixed { 
+      --cell-bg: #C3EBED; 
+      border-color: #84D9DD; 
+    }
     .entry { 
       background: transparent; 
       color: inherit; 
@@ -540,6 +677,7 @@
     .entry.locked {
       border-color: #10b981;
       background-color: #064e3b;
+      color: black;
     }
     .entry.incorrect {
       border-color: #ef4444;
@@ -547,6 +685,21 @@
     }
     .byline { color: #aaa; }
     .status { color: #aaa; }
+    
+    .picker select {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f9fafb;
+    }
+    
+    .picker select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .picker select:hover {
+      border-color: #4b5563;
+    }
     .toolbar button {
       background: #1f2937;
       border-color: #374151;
@@ -559,10 +712,26 @@
     .toolbar button:active {
       background: #111827;
     }
+    .reset-btn {
+      background: #374151 !important;
+      border-color: #4b5563 !important;
+      color: #f9fafb !important;
+    }
+    .reset-btn:hover {
+      background: #4b5563 !important;
+      border-color: #6b7280 !important;
+    }
   }
   :global(button){ cursor: pointer; }
   :global(input){ font: inherit; }
   :global(*) { box-sizing: border-box; }
+  :global(body) { 
+    font-family: Inter, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+  }
+  @supports (font-variation-settings: normal) {
+    :global(body) { font-family: InterVariable, sans-serif; }
+  }
 </style>
 
 

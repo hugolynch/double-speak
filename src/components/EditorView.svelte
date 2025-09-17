@@ -123,6 +123,33 @@
     return arrows
   }
 
+  // Check if a tile is being used in the puzzle
+  function isTileUsed(index: number): boolean {
+    const cell = cells[index]
+    if (!cell) return false
+    
+    // Tile is used if it has fixed content, user input, or is connected via arrows
+    if (cell.isFixed || cell.fixed) return true
+    if (cell.right || cell.down) return true
+    
+    // Check if this tile is connected to any arrows from other tiles
+    for (let i = 0; i < cells.length; i++) {
+      const otherCell = cells[i]
+      if (!otherCell) continue
+      
+      const otherRow = Math.floor(i / cols)
+      const otherCol = i % cols
+      const thisRow = Math.floor(index / cols)
+      const thisCol = index % cols
+      
+      // Check if other tile has arrow pointing to this tile
+      if (otherCell.right && otherRow === thisRow && otherCol === thisCol - 1) return true
+      if (otherCell.down && otherCol === thisCol && otherRow === thisRow - 1) return true
+    }
+    
+    return false
+  }
+
   // Detect which rows and columns are actually used
   function getUsedBounds() {
     let minRow = rows, maxRow = -1, minCol = cols, maxCol = -1
@@ -194,7 +221,7 @@
     }
     
     return {
-      id: meta.id || meta.date,
+      id: meta.date, // Always use date as ID
       date: meta.date,
       title: meta.title || undefined,
       author: meta.author || undefined,
@@ -354,10 +381,23 @@
 
 <div class="editor">
   <header>
-    <h2>Puzzle Editor</h2>
+    <div class="header-content">
+      <img src="/logo.svg" alt="Waterfalls" class="logo" />
+      <div class="header-text">
+        <p class="subtitle">Editor</p>
+      </div>
+    </div>
   </header>
   
   <div class="editor-sections">
+    <div class="metadata-section">
+      <div class="metadata-row">
+        <input type="text" value={meta.title} on:input={(e) => (meta.title = (e.target as HTMLInputElement).value)} placeholder="Title" />
+        <input type="text" value={meta.author} on:input={(e) => (meta.author = (e.target as HTMLInputElement).value)} placeholder="Author" />
+        <input type="date" value={meta.date} on:input={(e) => (meta.date = (e.target as HTMLInputElement).value)} placeholder="Date" />
+      </div>
+    </div>
+
     <div class="controls">
       <button on:click={downloadJSON}>Export JSON</button>
       <button on:click={copyJSON}>Copy JSON</button>
@@ -367,36 +407,20 @@
       </div>
     </div>
 
-    <div class="metadata-section">
-      <div class="metadata-row">
-        <label>ID <input type="text" value={meta.id} on:input={(e) => (meta.id = (e.target as HTMLInputElement).value)} placeholder="e.g., 2025-01-15" /></label>
-        <label>Date <input type="date" value={meta.date} on:input={(e) => (meta.date = (e.target as HTMLInputElement).value)} /></label>
-      </div>
-      <div class="metadata-row">
-        <label>Title <input type="text" value={meta.title} on:input={(e) => (meta.title = (e.target as HTMLInputElement).value)} placeholder="Puzzle title" /></label>
-        <label>Author <input type="text" value={meta.author} on:input={(e) => (meta.author = (e.target as HTMLInputElement).value)} placeholder="Your name" /></label>
-      </div>
-    </div>
-
     <div class="controls">
       <div class="grid-size-info">
         <span class="size-label">Grid: {rows}×{cols}</span>
       </div>
       <div class="insert-controls">
         <div class="insert-section">
-          <span class="insert-label">Rows:</span>
           <div class="insert-buttons">
-            <button on:click={insertRowAtTop} disabled={rows >= 12} title="Insert row at top">+ Top</button>
-            <button on:click={insertRowAtBottom} disabled={rows >= 12} title="Insert row at bottom">+ Bottom</button>
+            <button on:click={insertRowAtTop} disabled={rows >= 12} title="Insert row at top">↑</button>
+            <button on:click={insertRowAtBottom} disabled={rows >= 12} title="Insert row at bottom">↓</button>
+            <button on:click={insertColumnAtLeft} disabled={cols >= 12} title="Insert column at left">←</button>
+            <button on:click={insertColumnAtRight} disabled={cols >= 12} title="Insert column at right">→</button>
           </div>
         </div>
-        <div class="insert-section">
-          <span class="insert-label">Cols:</span>
-          <div class="insert-buttons">
-            <button on:click={insertColumnAtLeft} disabled={cols >= 12} title="Insert column at left">+ Left</button>
-            <button on:click={insertColumnAtRight} disabled={cols >= 12} title="Insert column at right">+ Right</button>
-          </div>
-        </div>
+
       </div>
       <button on:click={autoTrim}>Auto-trim unused</button>
     </div>
@@ -415,11 +439,10 @@
     </svg>
     <div class="grid" style={`grid-template-columns: repeat(${cols}, 1fr);`}>
       {#each Array.from({ length: rows * cols }) as _, i}
-        <div class={`tile ${cells[i]?.isFixed ? 'fixed' : ''}`} use:collectEl={i}>
+        <div class={`tile ${cells[i]?.isFixed ? 'fixed' : ''} ${isTileUsed(i) ? 'used' : ''}`} use:collectEl={i}>
           <input
             class="word"
             type="text"
-            placeholder="word"
             value={cells[i]?.fixed ?? ''}
             on:input={(e) => {
               const val = (e.target as HTMLInputElement).value.trim()
@@ -463,14 +486,18 @@
 
 <style>
   .editor { max-width: 880px; margin: 0 auto; padding: 24px; }
-  header { margin-bottom: 24px; }
-  h2 { margin: 0; font-size: 24px; font-weight: 600; color: #1f2937; }
+  header { margin-bottom: 16px; }
+  .header-content { display: flex; align-items: baseline; gap: 12px; }
+  .logo { height: 40px; width: auto; }
+  .header-text { display: flex; align-items: baseline; gap: 12px; }
+  .subtitle { color: #00AFB6; margin: 0; font-size: 16px;}
   
   .editor-sections {
     display: flex;
     flex-direction: column;
     gap: 16px;
     margin-bottom: 32px;
+    border-top: 1px solid #eee; padding-top: 16px;
   }
   
   .metadata-section {
@@ -481,17 +508,13 @@
   
   .metadata-row {
     display: flex;
-    gap: 16px;
+    gap: 8px;
     align-items: center;
   }
   
-  .metadata-row label {
+  .metadata-row input {
     flex: 1;
     min-width: 0;
-  }
-  
-  .metadata-row input {
-    width: 100%;
   }
   .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
   
@@ -510,16 +533,10 @@
     color: #374151;
   }
   
-  .insert-controls {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-  
   .insert-section {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
   }
   
   .insert-label {
@@ -565,6 +582,10 @@
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  input::placeholder {
+    color: #9ca3af;
   }
   .sep { width: 1px; height: 24px; background: #d1d5db; display: inline-block; }
   .file-input-wrapper {
@@ -631,13 +652,13 @@
     position: absolute; 
     inset: 0; 
     pointer-events: none; 
-    color: #aaa; 
+    color: #84D9DD; 
     z-index: 10;
   }
-  .arrows line { stroke: currentColor; stroke-width: 2; }
+  .arrows line { stroke: none; }
   .tile { 
-    border: 1px dashed #bbb; 
-    border-radius: 8px; 
+    border: 1px dashed #d1d5db; 
+    border-radius: 12px; 
     min-height: 72px; 
     display: flex; 
     flex-direction: column;
@@ -647,24 +668,34 @@
     padding: 8px;
     gap: 4px;
   }
+  .tile.used {
+    border-color: #84D9DD;
+  }
   .tile.fixed {
-    background-color: #f5f5f5;
+    background-color: #E6F6F7;
+    position: relative;
+    z-index: 10;
   }
   .word { 
     width: 100%; 
     padding: 6px 8px; 
-    border: 1px solid #ccc; 
+    border: 1px solid #84D9DD; 
     border-radius: 4px; 
     text-align: center;
     font-size: 14px;
+    text-transform: uppercase;
+    background: white;
+    position: relative;
+    z-index: 10;
   }
   .tile.fixed .word {
     font-weight: bold;
+    color: #005155;
   }
   .controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 16px;
     margin-top: 4px;
   }
   .lock-btn {
@@ -689,7 +720,7 @@
   }
   .dirs { 
     display: flex; 
-    gap: 8px; 
+    gap: 4px; 
     font-size: 12px; 
     color: #666;
   }
@@ -713,7 +744,6 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    h2 { color: #f9fafb; }
     .tile { border-color: #444; }
     .tile.fixed { background-color: #2a2a2a; }
     .dirs { color: #aaa; }
@@ -736,6 +766,10 @@
     input[type="text"]:focus, input[type="date"]:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    input::placeholder {
+      color: #6b7280;
     }
       .file-input-label {
       background: #1f2937;
@@ -798,6 +832,14 @@
     .insert-label {
       color: #f9fafb;
     }
+  }
+  
+  :global(body) { 
+    font-family: Inter, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+  }
+  @supports (font-variation-settings: normal) {
+    :global(body) { font-family: InterVariable, sans-serif; }
   }
 </style>
 

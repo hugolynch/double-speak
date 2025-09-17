@@ -1,4 +1,4 @@
-# Double Speak (game)
+# Waterfalls (game)
 
 Single-view Svelte 5 + Vite app for the daily word puzzle.
 
