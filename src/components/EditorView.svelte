@@ -48,17 +48,6 @@
     measureArrows()
   }
 
-  function handleRowsInput(value: string) {
-    const n = Number(value)
-    if (!Number.isFinite(n)) return
-    applySize(n, cols)
-  }
-
-  function handleColsInput(value: string) {
-    const n = Number(value)
-    if (!Number.isFinite(n)) return
-    applySize(rows, n)
-  }
 
   // Insert a row at the top
   function insertRowAtTop() {
@@ -390,26 +379,26 @@
     </div>
 
     <div class="controls">
-      <label>Rows <input type="number" min="1" max="12" value={rows} on:input={(e) => handleRowsInput((e.target as HTMLInputElement).value)} /></label>
-      <label>Cols <input type="number" min="1" max="12" value={cols} on:input={(e) => handleColsInput((e.target as HTMLInputElement).value)} /></label>
+      <div class="grid-size-info">
+        <span class="size-label">Grid: {rows}×{cols}</span>
+      </div>
+      <div class="insert-controls">
+        <div class="insert-section">
+          <span class="insert-label">Rows:</span>
+          <div class="insert-buttons">
+            <button on:click={insertRowAtTop} disabled={rows >= 12} title="Insert row at top">+ Top</button>
+            <button on:click={insertRowAtBottom} disabled={rows >= 12} title="Insert row at bottom">+ Bottom</button>
+          </div>
+        </div>
+        <div class="insert-section">
+          <span class="insert-label">Cols:</span>
+          <div class="insert-buttons">
+            <button on:click={insertColumnAtLeft} disabled={cols >= 12} title="Insert column at left">+ Left</button>
+            <button on:click={insertColumnAtRight} disabled={cols >= 12} title="Insert column at right">+ Right</button>
+          </div>
+        </div>
+      </div>
       <button on:click={autoTrim}>Auto-trim unused</button>
-    </div>
-
-    <div class="insert-controls">
-      <div class="insert-section">
-        <h4>Insert Rows</h4>
-        <div class="insert-buttons">
-          <button on:click={insertRowAtTop} disabled={rows >= 12} title="Insert row at top">+ Top</button>
-          <button on:click={insertRowAtBottom} disabled={rows >= 12} title="Insert row at bottom">+ Bottom</button>
-        </div>
-      </div>
-      <div class="insert-section">
-        <h4>Insert Columns</h4>
-        <div class="insert-buttons">
-          <button on:click={insertColumnAtLeft} disabled={cols >= 12} title="Insert column at left">+ Left</button>
-          <button on:click={insertColumnAtRight} disabled={cols >= 12} title="Insert column at right">+ Right</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -504,40 +493,51 @@
   .metadata-row input {
     width: 100%;
   }
-  .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
   
-  .insert-controls {
+  .grid-size-info {
     display: flex;
-    gap: 24px;
-    margin-bottom: 16px;
-    padding: 16px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
   }
   
-  .insert-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .insert-section h4 {
-    margin: 0;
+  .size-label {
     font-size: 14px;
     font-weight: 600;
     color: #374151;
   }
   
-  .insert-buttons {
+  .insert-controls {
     display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .insert-section {
+    display: flex;
+    align-items: center;
     gap: 8px;
   }
   
+  .insert-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    min-width: 40px;
+  }
+  
+  .insert-buttons {
+    display: flex;
+    gap: 4px;
+  }
+  
   .insert-buttons button {
-    padding: 6px 12px;
+    padding: 4px 8px;
     font-size: 12px;
-    min-width: 60px;
+    min-width: 50px;
   }
   
   .insert-buttons button:disabled {
@@ -552,7 +552,7 @@
     font-weight: 500;
     color: #374151;
   }
-  input[type="text"], input[type="date"], input[type="number"] { 
+  input[type="text"], input[type="date"] { 
     padding: 8px 12px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
@@ -561,12 +561,11 @@
     font-size: 14px;
     transition: all 0.15s ease;
   }
-  input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus {
+  input[type="text"]:focus, input[type="date"]:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
-  input[type="number"] { width: 80px; }
   .sep { width: 1px; height: 24px; background: #d1d5db; display: inline-block; }
   .file-input-wrapper {
     position: relative;
@@ -729,12 +728,12 @@
     .sep { background: #374151; }
     .arrows { color: #777; }
     label { color: #f9fafb; }
-    input[type="text"], input[type="date"], input[type="number"] {
+    input[type="text"], input[type="date"] {
       background: #1f2937;
       border-color: #374151;
       color: #f9fafb;
     }
-    input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus {
+    input[type="text"]:focus, input[type="date"]:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
@@ -787,12 +786,16 @@
       border-color: #4b5563;
     }
     
-    .insert-controls {
-      background: #1f2937;
-      border-color: #374151;
+    .grid-size-info {
+      background: #374151;
+      border-color: #4b5563;
     }
     
-    .insert-section h4 {
+    .size-label {
+      color: #f9fafb;
+    }
+    
+    .insert-label {
       color: #f9fafb;
     }
   }
