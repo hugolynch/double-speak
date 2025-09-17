@@ -382,7 +382,7 @@
 <div class="editor">
   <header>
     <div class="header-content">
-      <img src="/logo.svg" alt="Waterfalls" class="logo" />
+      <img src="/waterfalls/logo.svg" alt="Waterfalls" class="logo" />
       <div class="header-text">
         <p class="subtitle">Editor</p>
       </div>

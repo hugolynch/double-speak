@@ -339,7 +339,7 @@
 <div class="app">
   <header>
     <div class="header-content">
-      <img src="/logo.svg" alt="Waterfalls" class="logo" />
+      <img src="/waterfalls/logo.svg" alt="Waterfalls" class="logo" />
     </div>
   </header>
   <main>
