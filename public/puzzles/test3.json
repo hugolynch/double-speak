@@ -1,41 +1,38 @@
 {
-  "id": "2025-09-16",
-  "date": "2025-09-16",
-  "title": "Daylight savings",
+  "id": "2025-09-15",
+  "date": "2025-09-15",
+  "title": "How ya doin'?",
   "author": "Hugo",
   "grid": {
     "rows": 4,
     "cols": 3,
     "cells": [
       {
-        "fixed": "fall"
+        "fixed": "blank"
       },
+      {
+        "fixed": "ship"
+      },
+      {},
+      {},
       {},
       {
-        "fixed": "fawkes"
+        "fixed": "-it-ralph"
+      },
+      {
+        "fixed": "book"
       },
       {},
       {},
       {},
       {
-        "fixed": "and forth"
+        "fixed": "my words"
       },
-      {},
       {
-        "fixed": "forward"
-      },
-      {},
-      {
-        "fixed": "time"
-      },
-      {}
+        "fixed": "dog"
+      }
     ],
     "arrows": [
-      {
-        "from": 0,
-        "to": 1,
-        "dir": "right"
-      },
       {
         "from": 0,
         "to": 3,
@@ -45,6 +42,16 @@
         "from": 1,
         "to": 2,
         "dir": "right"
+      },
+      {
+        "from": 1,
+        "to": 4,
+        "dir": "down"
+      },
+      {
+        "from": 2,
+        "to": 5,
+        "dir": "down"
       },
       {
         "from": 3,
@@ -57,32 +64,32 @@
         "dir": "down"
       },
       {
-        "from": 4,
-        "to": 5,
+        "from": 6,
+        "to": 7,
         "dir": "right"
       },
       {
-        "from": 4,
-        "to": 7,
-        "dir": "down"
-      },
-      {
-        "from": 5,
+        "from": 7,
         "to": 8,
-        "dir": "down"
+        "dir": "right"
       },
       {
         "from": 7,
         "to": 10,
         "dir": "down"
+      },
+      {
+        "from": 8,
+        "to": 11,
+        "dir": "down"
       }
     ]
   },
   "solutions": {
-    "1": "guy",
-    "3": "back",
-    "4": "hand",
-    "5": "spring",
-    "7": "over"
+    "2": "wreck",
+    "3": "check",
+    "4": "mate",
+    "7": "mark",
+    "8": "up"
   }
 }

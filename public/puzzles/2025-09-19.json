@@ -1,42 +1,42 @@
 {
-  "id": "2025-09-15",
-  "date": "2025-09-15",
-  "title": "How're you doin'",
+  "id": "2025-09-19",
+  "date": "2025-09-19",
+  "title": "Talk to me, baby",
   "author": "Hugo",
   "grid": {
-    "rows": 4,
-    "cols": 3,
+    "rows": 3,
+    "cols": 4,
     "cells": [
       {
-        "fixed": "blank"
-      },
-      {
-        "fixed": "ship"
+        "fixed": "baby"
       },
       {},
       {},
-      {},
       {
-        "fixed": "it-ralph"
+        "fixed": "set"
       },
       {
-        "fixed": "book"
+        "fixed": "talk of the"
       },
       {},
       {},
+      {
+        "fixed": "hours"
+      },
       {},
       {
-        "fixed": "my words"
+        "fixed": "hall"
       },
+      {},
       {
-        "fixed": "dog"
+        "fixed": "animal"
       }
     ],
     "arrows": [
       {
         "from": 0,
-        "to": 3,
-        "dir": "down"
+        "to": 1,
+        "dir": "right"
       },
       {
         "from": 1,
@@ -45,22 +45,27 @@
       },
       {
         "from": 1,
-        "to": 4,
-        "dir": "down"
-      },
-      {
-        "from": 2,
         "to": 5,
         "dir": "down"
       },
       {
-        "from": 3,
-        "to": 4,
+        "from": 2,
+        "to": 3,
         "dir": "right"
       },
       {
-        "from": 3,
+        "from": 2,
         "to": 6,
+        "dir": "down"
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 9,
         "dir": "down"
       },
       {
@@ -69,27 +74,22 @@
         "dir": "right"
       },
       {
-        "from": 7,
-        "to": 8,
-        "dir": "right"
-      },
-      {
-        "from": 7,
+        "from": 6,
         "to": 10,
         "dir": "down"
       },
       {
-        "from": 8,
+        "from": 10,
         "to": 11,
-        "dir": "down"
+        "dir": "right"
       }
     ]
   },
   "solutions": {
-    "2": "wreck",
-    "3": "check",
-    "4": "mate",
-    "7": "mark",
-    "8": "up"
+    "1": "boom",
+    "2": "box",
+    "5": "town",
+    "6": "office",
+    "10": "party"
   }
 }

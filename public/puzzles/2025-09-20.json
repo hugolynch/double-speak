@@ -1,0 +1,95 @@
+{
+  "id": "2025-09-20",
+  "date": "2025-09-20",
+  "title": "Look out!",
+  "author": "Hugo",
+  "grid": {
+    "rows": 3,
+    "cols": 4,
+    "cells": [
+      {
+        "fixed": "black"
+      },
+      {},
+      {},
+      {
+        "fixed": "of fame"
+      },
+      {
+        "fixed": "wild"
+      },
+      {},
+      {},
+      {
+        "fixed": "and tell"
+      },
+      {
+        "fixed": "conspiracy"
+      },
+      {},
+      {
+        "fixed": "of relativity"
+      },
+      {}
+    ],
+    "arrows": [
+      {
+        "from": 0,
+        "to": 1,
+        "dir": "right"
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "dir": "right"
+      },
+      {
+        "from": 1,
+        "to": 5,
+        "dir": "down"
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "dir": "right"
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 9,
+        "dir": "down"
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "dir": "right"
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "dir": "right"
+      }
+    ]
+  },
+  "solutions": {
+    "1": "board",
+    "2": "walk",
+    "5": "game",
+    "6": "show",
+    "9": "theory"
+  }
+}
