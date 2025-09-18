@@ -58,6 +58,54 @@
     }
   }
 
+  function getPuzzleScore(puzzleId: string): number | null {
+    const saved = localStorage.getItem(`waterfalls-${puzzleId}`)
+    if (!saved) return null
+    
+    try {
+      const state = JSON.parse(saved)
+      if (state.puzzleId !== puzzleId) return null
+      
+      // Calculate score from tileCompletions if available
+      if (state.tileCompletions) {
+        let totalScore = 0
+        for (const [cellIndex, completion] of Object.entries(state.tileCompletions)) {
+          const comp = completion as { time: number, submits: number }
+          totalScore += comp.time * comp.submits
+        }
+        return totalScore
+      }
+      
+      return null
+    } catch (e) {
+      return null
+    }
+  }
+
+  function wasCompletedInOneSubmit(puzzleId: string): boolean {
+    const saved = localStorage.getItem(`waterfalls-${puzzleId}`)
+    if (!saved) return false
+    
+    try {
+      const state = JSON.parse(saved)
+      if (state.puzzleId !== puzzleId) return false
+      
+      // Check if all tiles were completed in the same submit
+      if (state.tileCompletions) {
+        const submits = new Set<number>()
+        for (const [cellIndex, completion] of Object.entries(state.tileCompletions)) {
+          const comp = completion as { time: number, submits: number }
+          submits.add(comp.submits)
+        }
+        return submits.size === 1
+      }
+      
+      return false
+    } catch (e) {
+      return false
+    }
+  }
+
   function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -70,16 +118,30 @@
     window.dispatchEvent(event)
   }
 
-  // Show all puzzles, sorted by date (newest first), filtering out future puzzles
-  $: allPuzzles = game.index.filter(puzzle => isPast(puzzle.date))
+  // Admin mode state
+  let adminMode = $state(false)
+
+  // Show all puzzles, sorted by date (newest first), filtering out future puzzles unless in admin mode
+  let allPuzzles = $derived(game.index.filter(puzzle => adminMode || isPast(puzzle.date)))
 </script>
 
 <div class="archive">
   <header>
     <div class="header-content">
-      <img src="/waterfalls/logo.svg" alt="Waterfalls" class="logo" />
-      <div class="header-text">
-        <p class="subtitle">Archive</p>
+      <div class="header-left">
+        <img src="/waterfalls/logo.svg" alt="Waterfalls" class="logo" />
+        <span class="subtitle">Archive</span>
+      </div>
+      <div class="admin-toggle">
+        <span class="admin-label">Admin</span>
+        <button 
+          class="admin-switch" 
+          class:active={adminMode}
+          onclick={() => adminMode = !adminMode}
+          aria-label={adminMode ? 'Disable admin mode' : 'Enable admin mode'}
+        >
+          <div class="switch-slider"></div>
+        </button>
       </div>
     </div>
   </header>
@@ -97,23 +159,31 @@
               <div class="puzzle-date">
                 {formatDate(puzzle.date)}
               </div>
+              <div class="puzzle-title-author">
+                {#if puzzle.title}
+                <span class="puzzle-title">{puzzle.title}</span>
+                {/if}
+                {#if puzzle.author}
+                <span class="puzzle-author">by {puzzle.author}</span>
+                {/if}
+              </div>
               {#if isPuzzleCompleted(puzzle.id)}
                 {@const completionTime = getPuzzleCompletionTime(puzzle.id)}
+                {@const score = getPuzzleScore(puzzle.id)}
                 {#if completionTime}
-                  <div class="completion-time">
-                    Completed in {formatTime(completionTime)}
-                    <span class="checkmark">✓</span>
+                  <div class="completion-info">
+                    <span class="completion-time">Completed in {formatTime(completionTime)}</span>
+                    {#if score !== null}
+                      <span class="completion-score">Score: {score}</span>
+                    {/if}
+                    {#if wasCompletedInOneSubmit(puzzle.id)}
+                      <span class="star">★</span>
+                    {:else}
+                      <span class="checkmark">✓</span>
+                    {/if}
                   </div>
                 {/if}
               {/if}
-              <div class="puzzle-title-author">
-                {#if puzzle.title}
-                  <span class="puzzle-title">{puzzle.title}</span>
-                {/if}
-                {#if puzzle.author}
-                  <span class="puzzle-author">by {puzzle.author}</span>
-                {/if}
-              </div>
             </div>
             <div class="puzzle-arrow">→</div>
           </button>
@@ -134,11 +204,85 @@
     padding: 24px;
   }
 
-  header { margin-bottom: 16px; }
-  .header-content { display: flex; align-items: baseline; gap: 12px; }
-  .logo { height: 40px; width: auto; }
-  .header-text { display: flex; align-items: baseline; gap: 12px; margin-bottom: -10px; }
-  .subtitle { color: #00AFB6; margin: 0; font-size: 16px; }
+  header { 
+    margin-bottom: 16px; 
+  }
+  
+  .header-content { 
+    display: flex; 
+    align-items: baseline; 
+    justify-content: space-between;
+    gap: 16px; 
+  }
+  
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: -10px;
+  }
+  
+  .logo { 
+    height: 40px; 
+    width: auto; 
+  }
+  
+  .subtitle { 
+    color: #00AFB6; 
+    margin: 0; 
+    font-size: 16px; 
+  }
+  
+  .admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .admin-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+  }
+  
+  .admin-switch {
+    position: relative;
+    width: 40px;
+    height: 24px;
+    border: none;
+    border-radius: 12px;
+    background: #f3f4f6;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    padding: 0;
+    outline: none;
+    flex-shrink: 0;
+    align-self: flex-end;
+    margin-bottom: 2px;
+  }
+  
+  .admin-switch:hover {
+    background: #e5e7eb;
+  }
+  
+  .admin-switch.active {
+    background: #00AFB6;
+  }
+  
+  .switch-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+  }
+  
+  .admin-switch.active .switch-slider {
+    transform: translateX(16px);
+  }
 
   .puzzle-sections {
     display: flex;
@@ -194,13 +338,26 @@
     font-size: 1rem;
   }
 
-  .completion-time {
-    color: #6b7280;
-    font-size: 0.8rem;
+  .star {
+    color: #00AFB6;
+    font-size: 1rem;
+  }
+
+  .completion-info {
     margin-top: 2px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
+  }
+
+  .completion-time {
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+
+  .completion-score {
+    color: #6b7280;
+    font-size: 0.8rem;
   }
 
   .puzzle-title-author {
@@ -276,18 +433,79 @@
       color: #00787D;
     }
 
+    .star {
+      color: #00AFB6;
+    }
+
     .completion-time {
+      color: #9ca3af;
+    }
+
+    .completion-score {
       color: #9ca3af;
     }
 
     .empty-state {
       color: #9ca3af;
     }
+
+    .admin-label {
+      color: #9ca3af;
+    }
+
+    .admin-switch {
+      background: #374151;
+    }
+
+    .admin-switch:hover {
+      background: #4b5563;
+    }
+
+    .admin-switch.active {
+      background: #00AFB6;
+    }
+
+    .switch-slider {
+      background: #f9fafb;
+    }
   }
 
   @media (max-width: 768px) {
     .archive {
       padding: 16px;
+    }
+    
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .header-left {
+      width: 100%;
+      justify-content: space-between;
+    }
+    
+    .admin-toggle {
+      align-self: flex-end;
+    }
+    
+    .admin-label {
+      font-size: 12px;
+    }
+    
+    .admin-switch {
+      width: 36px;
+      height: 20px;
+    }
+    
+    .switch-slider {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .admin-switch.active .switch-slider {
+      transform: translateX(16px);
     }
   }
 </style>

@@ -109,7 +109,7 @@ export function submitAnswers(): boolean {
     const userInput = game.state.entries[idx] ?? ''
     const fullEntry = revealed + userInput
     
-    if (fullEntry === correctWord) {
+    if (fullEntry.toLowerCase() === (correctWord as string).toLowerCase()) {
       // Correct answer - lock the cell
       game.state.lockedCells.add(idx)
       game.state.incorrectCells.delete(idx)

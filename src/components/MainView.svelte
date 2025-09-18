@@ -14,6 +14,10 @@
   let timerInterval: ReturnType<typeof setInterval> | null = null
   let isCompleted = $state(false)
   let completionTime = $state<number | null>(null)
+  
+  // Scoring state
+  let submitCount = $state<number>(0)
+  let tileCompletions = $state<Record<number, { time: number, submits: number }>>({})
 
   function makeDemoPuzzle(): Puzzle {
     return {
@@ -49,8 +53,8 @@
     try {
       await fetchPuzzleIndex()
       // Only load initial puzzle if no puzzle is currently loaded
-        if (!game.puzzle) {
-          if (game.index.length > 0) {
+      if (!game.puzzle) {
+        if (game.index.length > 0) {
             // Try to find today's puzzle first
             const todayPuzzle = game.index.find(p => p.date === today)
             if (todayPuzzle) {
@@ -63,12 +67,12 @@
                 await fetchPuzzleById(mostRecentPast.id)
               } else {
                 // If no past puzzles exist, fall back to the newest available
-                const initial = game.index[0]
-                await fetchPuzzleById(initial.id)
+          const initial = game.index[0]
+          await fetchPuzzleById(initial.id)
               }
             }
-          } else {
-            loadPuzzle(makeDemoPuzzle())
+        } else {
+          loadPuzzle(makeDemoPuzzle())
         }
       }
       
@@ -97,17 +101,20 @@
   function setEntry(index: number, value: string) {
     if (isCellLocked(index)) return // Don't allow editing locked cells
     
+    // Convert input to lowercase for case-insensitive validation
+    const lowercaseValue = value.toLowerCase()
+    
     const revealed = game.state.reveals[index] ?? ''
     const revealedLength = revealed.length
     
     // Only allow user to edit the part after revealed letters
-    if (value.length < revealedLength) {
+    if (lowercaseValue.length < revealedLength) {
       // User is trying to delete revealed letters - don't allow it
       return
     }
     
     // Extract only the user input part (after revealed letters)
-    const userInput = value.slice(revealedLength)
+    const userInput = lowercaseValue.slice(revealedLength)
     game.state.entries[index] = userInput
     clearIncorrectStatus(index) // Clear red border when user types
     
@@ -116,8 +123,33 @@
   }
 
   function handleSubmit() {
+    // Increment submit count
+    submitCount++
+    
+    // Track which tiles were just completed
+    const previouslyLocked = new Set(game.state.lockedCells)
+    
     const solved = submitAnswers()
-    if (solved) {
+    
+    // Check for newly completed tiles
+    if (game.puzzle) {
+      const newlyLocked = Array.from(game.state.lockedCells).filter(
+        cellIndex => !previouslyLocked.has(cellIndex)
+      )
+      
+      // Record completion data for newly solved tiles
+      newlyLocked.forEach(cellIndex => {
+        if (!tileCompletions[cellIndex]) {
+          tileCompletions[cellIndex] = {
+            time: currentTime,
+            submits: submitCount
+          }
+        }
+      })
+    }
+    
+    // Check if puzzle is fully solved after this submit
+    if (isSolved()) {
       // Puzzle is solved - stop timer and mark as completed
       console.log('Puzzle solved!')
       stopTimer()
@@ -225,7 +257,7 @@
     
     const currentRevealed = game.state.reveals[i] ?? ''
     const nextLen = Math.min(currentRevealed.length + 1, solution.length)
-    const nextRevealed = solution.slice(0, nextLen)
+    const nextRevealed = solution.slice(0, nextLen).toLowerCase()
     
     // Clear any existing user input when revealing letters
     game.state.entries[i] = undefined
@@ -246,7 +278,9 @@
       lockedCells: Array.from(game.state.lockedCells),
       incorrectCells: Array.from(game.state.incorrectCells),
       solved: isSolved(),
-      completionTime: completionTime
+      completionTime: completionTime,
+      submitCount: submitCount,
+      tileCompletions: tileCompletions
     }
     localStorage.setItem(`waterfalls-${game.puzzle.id}`, JSON.stringify(state))
   }
@@ -269,6 +303,12 @@
             isCompleted = true
             completionTime = state.completionTime
           }
+          
+          // Restore submit count
+          submitCount = state.submitCount || 0
+          
+          // Restore tile completions
+          tileCompletions = state.tileCompletions || {}
         }
       } catch (e) {
         console.warn('Failed to load saved state:', e)
@@ -285,6 +325,8 @@
     game.state.incorrectCells = new Set()
     localStorage.removeItem(`waterfalls-${game.puzzle.id}`)
     resetTimer()
+    submitCount = 0 // Reset submit count
+    tileCompletions = {} // Reset tile completions
     startTimer() // Restart the timer after reset
   }
 
@@ -439,6 +481,248 @@
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  // Calculate individual tile score
+  function getTileScore(cellIndex: number): number {
+    const completion = tileCompletions[cellIndex]
+    if (!completion) return 0
+    return completion.time * completion.submits
+  }
+
+  // Calculate total score
+  function getTotalScore(): number {
+    if (!game.puzzle) return 0
+    
+    let totalScore = 0
+    for (let i = 0; i < game.puzzle.grid.cells.length; i++) {
+      const cell = game.puzzle.grid.cells[i]
+      // Only count tiles that are used in the puzzle (not fixed cells)
+      if (!cell.fixed && isCellUsed(i)) {
+        totalScore += getTileScore(i)
+      }
+    }
+    return totalScore
+  }
+
+  // Generate ASCII version of puzzle layout
+  function generateAsciiLayout(): string {
+    if (!game.puzzle) return ''
+    
+    const grid = game.puzzle.grid
+    const rows = grid.rows
+    const cols = grid.cols
+    let ascii = ''
+    
+    // Add header
+    ascii += `Waterfalls\n`
+    ascii += `${game.puzzle.title || 'Untitled'} by ${game.puzzle.author || 'Unknown'}\n\n`
+    ascii += `Completed in: ${completionTime ? formatTime(completionTime) : 'Not completed'}\n`
+    ascii += `Score: ${getTotalScore()}\n\n`
+    
+    // Create a 2D array to represent the grid with minimal spacing
+    const cellWidth = 12  // Increased width to fit words better
+    const cellHeight = 3
+    const totalWidth = cols * cellWidth + (cols - 1) * 1  // Reduced spacing
+    const totalHeight = rows * cellHeight + (rows - 1) * 1  // Reduced spacing
+    
+    // Initialize empty grid
+    const asciiGrid: string[][] = []
+    for (let y = 0; y < totalHeight; y++) {
+      asciiGrid[y] = new Array(totalWidth).fill(' ')
+    }
+    
+    // Helper function to draw a box
+    function drawBox(x: number, y: number, content: string, isFixed: boolean = false) {
+      const startX = x * (cellWidth + 1)
+      const startY = y * (cellHeight + 1)
+      
+      // Draw box borders
+      for (let i = 0; i < cellWidth; i++) {
+        asciiGrid[startY][startX + i] = '─'
+        asciiGrid[startY + cellHeight - 1][startX + i] = '─'
+      }
+      for (let i = 0; i < cellHeight; i++) {
+        asciiGrid[startY + i][startX] = '│'
+        asciiGrid[startY + i][startX + cellWidth - 1] = '│'
+      }
+      
+      // Draw corners
+      asciiGrid[startY][startX] = '┌'
+      asciiGrid[startY][startX + cellWidth - 1] = '┐'
+      asciiGrid[startY + cellHeight - 1][startX] = '└'
+      asciiGrid[startY + cellHeight - 1][startX + cellWidth - 1] = '┘'
+      
+      // Add content (centered)
+      const contentLines = content.split('\n')
+      const centerY = startY + Math.floor(cellHeight / 2)
+      const centerX = startX + Math.floor(cellWidth / 2)
+      
+      for (let i = 0; i < contentLines.length; i++) {
+        const line = contentLines[i]
+        const startContentX = centerX - Math.floor(line.length / 2)
+        for (let j = 0; j < line.length && startContentX + j < startX + cellWidth - 1; j++) {
+          asciiGrid[centerY + i][startContentX + j] = line[j]
+        }
+      }
+    }
+    
+    // Draw all cells
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cellIndex = row * cols + col
+        const cell = grid.cells[cellIndex]
+        
+        if (!cell) {
+          // Empty cell - skip (don't draw)
+          continue
+        } else if (cell.fixed) {
+          // Fixed cell - show the fixed word
+          drawBox(col, row, cell.fixed.toUpperCase(), true)
+        } else if (isCellUsed(cellIndex)) {
+          // Used cell - show completion time
+          const completion = tileCompletions[cellIndex]
+          if (completion) {
+            const timeStr = formatTime(completion.time)
+            drawBox(col, row, timeStr)
+          } else {
+            drawBox(col, row, '----')
+          }
+        } else {
+          // Unused cell - skip (don't draw)
+          continue
+        }
+      }
+    }
+    
+    // Draw arrows
+    for (const arrow of grid.arrows) {
+      const fromRow = Math.floor(arrow.from / cols)
+      const fromCol = arrow.from % cols
+      const toRow = Math.floor(arrow.to / cols)
+      const toCol = arrow.to % cols
+      
+      // Draw horizontal arrow
+      if (fromRow === toRow) {
+        // Position arrow in the space between boxes
+        const arrowY = fromRow * (cellHeight + 1) + Math.floor(cellHeight / 2)
+        const arrowX = fromCol * (cellWidth + 1) + cellWidth  // Right after the box
+        
+        if (arrowX < totalWidth) {
+          asciiGrid[arrowY][arrowX] = '→'
+        }
+      }
+      // Draw vertical arrow
+      else if (fromCol === toCol) {
+        // Position arrow in the space between boxes, alternating left/right
+        const centerX = fromCol * (cellWidth + 1) + Math.floor(cellWidth / 2)
+        const offsetX = (fromRow % 2 === 0) ? -1 : 1  // Alternate left/right
+        const arrowX = centerX + offsetX
+        const arrowY = fromRow * (cellHeight + 1) + cellHeight  // Right below the box
+        
+        if (arrowY < totalHeight && arrowX < totalWidth && arrowX >= 0) {
+          asciiGrid[arrowY][arrowX] = '↓'
+        }
+      }
+    }
+    
+    // Convert grid to string
+    for (let y = 0; y < totalHeight; y++) {
+      ascii += asciiGrid[y].join('') + '\n'
+    }
+    
+    return ascii
+  }
+
+  // Button state for share functionality
+  let shareButtonText = $state('Share')
+
+  // Copy ASCII layout to clipboard
+  async function copyAsciiLayout() {
+    try {
+      const ascii = generateAsciiLayout()
+      await navigator.clipboard.writeText(ascii)
+      
+      // Update button text temporarily
+      shareButtonText = 'Copied'
+      
+      // Revert after 3 seconds
+      setTimeout(() => {
+        shareButtonText = 'Share'
+      }, 3000)
+      
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err)
+    }
+  }
+
+  // Check if a tile was completed in a single submit
+  function wasTileCompletedInOneSubmit(cellIndex: number): boolean {
+    const completion = tileCompletions[cellIndex]
+    if (!completion) return false
+    
+    // Only show stars if the entire puzzle was completed in one submit
+    if (!game.puzzle) return false
+    
+    // Check if all used tiles were completed in submit 1
+    for (let i = 0; i < game.puzzle.grid.cells.length; i++) {
+      const cell = game.puzzle.grid.cells[i]
+      if (!cell.fixed && isCellUsed(i)) {
+        const tileCompletion = tileCompletions[i]
+        if (!tileCompletion || tileCompletion.submits !== 1) {
+          return false
+        }
+      }
+    }
+    
+    return true
+  }
+
+  // Get score breakdown for display
+  function getScoreBreakdown(): Array<{time: number, words: Array<string>, totalScore: number}> {
+    if (!game.puzzle) return []
+    
+    // Group tiles by submit number
+    const submitGroups: Record<number, Array<{cellIndex: number, word: string, score: number}>> = {}
+    
+    for (let i = 0; i < game.puzzle.grid.cells.length; i++) {
+      const cell = game.puzzle.grid.cells[i]
+      // Only count tiles that are used in the puzzle (not fixed cells)
+      if (!cell.fixed && isCellUsed(i)) {
+        const completion = tileCompletions[i]
+        if (completion) {
+          // Get the word that was solved
+          const solution = game.puzzle.solutions[i]
+          if (solution) {
+            if (!submitGroups[completion.submits]) {
+              submitGroups[completion.submits] = []
+            }
+            submitGroups[completion.submits].push({
+              cellIndex: i,
+              word: solution,
+              score: getTileScore(i)
+            })
+          }
+        }
+      }
+    }
+    
+    // Convert to array and sort by submit number
+    const breakdown = Object.entries(submitGroups).map(([submitStr, tiles]) => {
+      const submitNumber = parseInt(submitStr)
+      // Get the time from the first tile in this submit group
+      const time = Object.values(tileCompletions).find(completion => 
+        completion.submits === submitNumber
+      )?.time || 0
+      
+      return {
+        time: time,
+        words: tiles.map(tile => tile.word).sort(), // Sort words alphabetically
+        totalScore: tiles.reduce((sum, tile) => sum + tile.score, 0)
+      }
+    })
+    
+    return breakdown.sort((a, b) => a.time - b.time) // Sort by time
+  }
+
 </script>
 
 <div class="app">
@@ -458,8 +742,31 @@
           {/if}
         </div>
         <div class="timer">
-          {#if isCompleted && completionTime !== null}
-            <span class="completion-time">Completed in {formatTime(completionTime)}</span>
+          {#if isSolved() && completionTime !== null}
+            <div class="completion-info">
+              <div class="score-breakdown">
+                <div class="completion-header">
+                  <span class="completion-time">Completed in {formatTime(completionTime)}</span>
+                  <span class="completion-score">Score: {getTotalScore()}</span>
+                </div>
+                {#each getScoreBreakdown() as submit}
+                  <div class="submit-line">
+                    <span class="submit-time">{formatTime(submit.time)}</span>
+                    <span class="words-list">
+                      {#each submit.words as word}
+                        <span class="word-badge">{word}</span>
+                      {/each}
+                    </span>
+                    <span class="submit-score">{submit.totalScore}</span>
+                  </div>
+                {/each}
+                <div class="ascii-button-container">
+                  <button class="ascii-button" onclick={copyAsciiLayout}>
+                    {shareButtonText}
+                  </button>
+                </div>
+              </div>
+            </div>
           {:else if startTime !== null}
             <span class="current-time">Time: {formatTime(currentTime)}</span>
           {/if}
@@ -551,7 +858,11 @@
                   </div>
                 {/if}
                 {#if isCellLocked(i)}
+                  {#if wasTileCompletedInOneSubmit(i)}
+                    <div class="locked-star">★</div>
+                  {:else}
                   <div class="locked-star">✓</div>
+                  {/if}
                 {/if}
               </div>
             {/if}
@@ -594,16 +905,133 @@
   .puzzle-info {
     text-align: center;
     margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .puzzle-meta {
+    margin-bottom: 16px;
   }
 
   .timer {
-    margin-top: 8px;
     font-size: 0.9rem;
+  }
+
+  .completion-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .completion-time {
     color: #00AFB6;
     font-weight: 600;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  .completion-score {
+    color: #00AFB6;
+    font-weight: 600;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  .score-breakdown {
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 0.8rem;
+    min-width: 300px;
+    max-width: 500px;
+    margin: 0 auto;
+    width: fit-content;
+  }
+
+  .completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    font-family: monospace;
+  }
+
+
+  .submit-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 4px 0;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  .submit-line:last-child {
+    margin-bottom: 0;
+  }
+
+  .submit-time {
+    color: #6b7280;
+    font-family: monospace;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: left;
+  }
+
+  .submit-score {
+    font-weight: 600;
+    color: #00AFB6;
+    font-family: monospace;
+    min-width: 50px;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .words-list {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    justify-content: flex-start;
+    font-family: monospace;
+  }
+
+  .word-badge {
+    background: #e5e7eb;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    color: #374151;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-family: monospace;
+  }
+
+  .ascii-button-container {
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  .ascii-button {
+    background: #00AFB6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+  }
+
+  .ascii-button:hover {
+    background: #0099a0;
   }
 
   .current-time {
@@ -612,7 +1040,7 @@
   .puzzle-title {
     color: #00AFB6;
     font-size: 1.8rem;
-    margin: 0 0 8px 0;
+    margin: 0;
     font-weight: 600;
   }
   .puzzle-meta {
@@ -801,6 +1229,41 @@
     
     .completion-time {
       color: #10b981;
+    }
+    
+    .completion-score {
+      color: #10b981;
+    }
+    
+    .score-breakdown {
+      background: #1f2937;
+    }
+    
+    .completion-header {
+      border-bottom-color: #4b5563;
+    }
+
+
+    .ascii-button {
+      background: #00AFB6;
+    }
+
+    .ascii-button:hover {
+      background: #0099a0;
+    }
+    
+    
+    .submit-time {
+      color: #9ca3af;
+    }
+    
+    .submit-score {
+      color: #10b981;
+    }
+    
+    .word-badge {
+      background: #374151;
+      color: #f9fafb;
     }
     
     .current-time {
