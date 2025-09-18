@@ -206,7 +206,7 @@
 
   .puzzle-title-author {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 4px;
   }
 
