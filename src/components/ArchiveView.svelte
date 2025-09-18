@@ -28,6 +28,23 @@
     return dateStr <= todayStr
   }
 
+  function isPuzzleCompleted(puzzleId: string): boolean {
+    const saved = localStorage.getItem(`waterfalls-${puzzleId}`)
+    if (!saved) return false
+    
+    try {
+      const state = JSON.parse(saved)
+      if (state.puzzleId !== puzzleId) return false
+      
+      // Check if the puzzle was marked as solved
+      const isCompleted = state.solved === true
+      console.log(`Puzzle ${puzzleId} completed:`, isCompleted, state)
+      return isCompleted
+    } catch (e) {
+      console.warn('Failed to parse saved state:', e)
+      return false
+    }
+  }
 
   function selectPuzzle(id: string) {
     // Dispatch event to parent to switch to play mode and load puzzle
@@ -55,10 +72,16 @@
         {#each allPuzzles as puzzle}
           <button 
             class="puzzle-card"
+            class:completed={isPuzzleCompleted(puzzle.id)}
             on:click={() => selectPuzzle(puzzle.id)}
           >
             <div class="puzzle-info">
-              <div class="puzzle-date">{formatDate(puzzle.date)}</div>
+              <div class="puzzle-date">
+                {formatDate(puzzle.date)}
+                {#if isPuzzleCompleted(puzzle.id)}
+                  <span class="checkmark">✓</span>
+                {/if}
+              </div>
               <div class="puzzle-title-author">
                 {#if puzzle.title}
                   <span class="puzzle-title">{puzzle.title}</span>
@@ -123,6 +146,10 @@
     border-color: #00AFB6;
   }
 
+  .puzzle-card.completed {
+    background: #E6F6F7;
+  }
+
 
   .puzzle-info {
     flex: 1;
@@ -133,12 +160,21 @@
     color: #374151;
     font-size: 0.9rem;
     margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .checkmark {
+    color: #00787D;
+    font-size: 1rem;
+    font-weight: bold;
   }
 
   .puzzle-title-author {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
   }
 
   .puzzle-title {
@@ -150,7 +186,6 @@
   .puzzle-author {
     color: #6b7280;
     font-size: 0.8rem;
-    font-style: italic;
   }
 
   .puzzle-arrow {
@@ -182,6 +217,10 @@
       color: #f9fafb;
     }
 
+    .puzzle-card.completed {
+      background: #1e3a3a;
+    }
+
     .puzzle-card:hover {
       border-color: #00AFB6;
     }
@@ -200,6 +239,10 @@
 
     .puzzle-arrow {
       color: #00AFB6;
+    }
+
+    .checkmark {
+      color: #00787D;
     }
 
     .empty-state {

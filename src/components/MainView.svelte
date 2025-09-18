@@ -230,7 +230,8 @@
       reveals: game.state.reveals,
       focusedCell: game.state.focusedCell,
       lockedCells: Array.from(game.state.lockedCells),
-      incorrectCells: Array.from(game.state.incorrectCells)
+      incorrectCells: Array.from(game.state.incorrectCells),
+      solved: isSolved()
     }
     localStorage.setItem(`waterfalls-${game.puzzle.id}`, JSON.stringify(state))
   }
