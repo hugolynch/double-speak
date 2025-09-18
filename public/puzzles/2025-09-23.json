@@ -1,0 +1,118 @@
+{
+  "id": "2025-09-23",
+  "date": "2025-09-23",
+  "title": "It's getting hot in here",
+  "author": "Hugo Lynch",
+  "grid": {
+    "rows": 4,
+    "cols": 4,
+    "cells": [
+      {},
+      {
+        "fixed": "tank"
+      },
+      {
+        "fixed": "hot"
+      },
+      {},
+      {
+        "fixed": "circus"
+      },
+      {},
+      {},
+      {
+        "fixed": "pot"
+      },
+      {
+        "fixed": "the cat in the"
+      },
+      {},
+      {},
+      {},
+      {},
+      {
+        "fixed": "in hand"
+      },
+      {
+        "fixed": "or treat"
+      },
+      {
+        "fixed": "in the dark"
+      }
+    ],
+    "arrows": [
+      {
+        "from": 1,
+        "to": 5,
+        "dir": "down"
+      },
+      {
+        "from": 2,
+        "to": 6,
+        "dir": "down"
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 9,
+        "dir": "down"
+      },
+      {
+        "from": 6,
+        "to": 10,
+        "dir": "down"
+      },
+      {
+        "from": 7,
+        "to": 11,
+        "dir": "down"
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 13,
+        "dir": "down"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 14,
+        "dir": "down"
+      },
+      {
+        "from": 11,
+        "to": 15,
+        "dir": "down"
+      }
+    ]
+  },
+  "solutions": {
+    "5": "top",
+    "6": "dog",
+    "9": "hat",
+    "10": "trick",
+    "11": "shot"
+  }
+}
