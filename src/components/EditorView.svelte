@@ -409,7 +409,7 @@
 
     <div class="controls">
       <div class="grid-size-info">
-        <span class="size-label">Grid: {rows}×{cols}</span>
+        <span class="size-label">{rows}×{cols} Grid</span>
       </div>
       <div class="insert-controls">
         <div class="insert-section">
@@ -495,8 +495,8 @@
   .editor-sections {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-bottom: 32px;
+    gap: 8px;
+    margin-bottom: 16px;
     border-top: 1px solid #eee; padding-top: 16px;
   }
   
@@ -516,7 +516,7 @@
     flex: 1;
     min-width: 0;
   }
-  .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   
   .grid-size-info {
     display: flex;
@@ -695,7 +695,7 @@
   .controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
     margin-top: 4px;
   }
   .lock-btn {
