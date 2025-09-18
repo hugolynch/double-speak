@@ -1,7 +1,35 @@
 <script lang="ts">
   import MainView from './components/MainView.svelte'
   import EditorView from './components/EditorView.svelte'
-  let mode: 'play' | 'edit' = 'play'
+  import ArchiveView from './components/ArchiveView.svelte'
+  import { onMount } from 'svelte'
+  import { game, fetchPuzzleIndex, fetchPuzzleById } from './lib/state.svelte'
+
+  let mode: 'play' | 'edit' | 'archive' = 'play'
+
+  onMount(() => {
+    // Listen for navigation events from MainView
+    const handleNavigate = (event: CustomEvent) => {
+      if (event.detail === 'archive') {
+        mode = 'archive'
+      }
+    }
+    
+    // Listen for puzzle selection from ArchiveView
+    const handlePuzzleSelect = (event: CustomEvent) => {
+      mode = 'play'
+      fetchPuzzleById(event.detail)
+    }
+    
+    window.addEventListener('navigate', handleNavigate as EventListener)
+    window.addEventListener('puzzleSelect', handlePuzzleSelect as EventListener)
+    
+    return () => {
+      window.removeEventListener('navigate', handleNavigate as EventListener)
+      window.removeEventListener('puzzleSelect', handlePuzzleSelect as EventListener)
+    }
+  })
+
 </script>
 
 <div class="mode-toggle">
@@ -14,6 +42,13 @@
   </button>
   <button 
     class="mode-btn" 
+    class:active={mode==='archive'}
+    on:click={() => (mode = 'archive')}
+  >
+    Archive
+  </button>
+  <button 
+    class="mode-btn" 
     class:active={mode==='edit'}
     on:click={() => (mode = 'edit')}
   >
@@ -23,6 +58,8 @@
 
 {#if mode === 'play'}
   <MainView />
+{:else if mode === 'archive'}
+  <ArchiveView />
 {:else}
   <EditorView />
 {/if}

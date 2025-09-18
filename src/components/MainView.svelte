@@ -4,7 +4,9 @@
   import type { Puzzle } from '../types/puzzle'
   import { game, loadPuzzle, isSolved, submitAnswers, isCellLocked, isCellIncorrect, clearIncorrectStatus, fetchPuzzleIndex, fetchPuzzleById } from '../lib/state.svelte'
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Date().getFullYear() + '-' + 
+    String(new Date().getMonth() + 1).padStart(2, '0') + '-' + 
+    String(new Date().getDate()).padStart(2, '0')
 
   function makeDemoPuzzle(): Puzzle {
     return {
@@ -39,16 +41,43 @@
   onMount(async () => {
     try {
       await fetchPuzzleIndex()
-      if (game.index.length > 0) {
-        const initial = game.index[0]
-        await fetchPuzzleById(initial.id)
-      } else if (!game.puzzle) {
-        loadPuzzle(makeDemoPuzzle())
+      // Only load initial puzzle if no puzzle is currently loaded
+        if (!game.puzzle) {
+          if (game.index.length > 0) {
+            // Try to find today's puzzle first
+            const todayPuzzle = game.index.find(p => p.date === today)
+            if (todayPuzzle) {
+              await fetchPuzzleById(todayPuzzle.id)
+            } else {
+              // Fall back to the most recent puzzle before today's date
+              const pastPuzzles = game.index.filter(p => p.date < today)
+              if (pastPuzzles.length > 0) {
+                const mostRecentPast = pastPuzzles[0] // Already sorted by date (newest first)
+                await fetchPuzzleById(mostRecentPast.id)
+              } else {
+                // If no past puzzles exist, fall back to the newest available
+                const initial = game.index[0]
+                await fetchPuzzleById(initial.id)
+              }
+            }
+          } else {
+            loadPuzzle(makeDemoPuzzle())
+        }
       }
       
       // Load saved state from localStorage
       loadSavedState()
     } finally {
+      measureArrows()
+    }
+  })
+
+  // React to puzzle changes (when switching from archive)
+  $effect(() => {
+    if (game.puzzle) {
+      // Load saved state for the current puzzle
+      loadSavedState()
+      // Re-measure arrows when puzzle changes
       measureArrows()
     }
   })
@@ -250,9 +279,9 @@
   // Arrow overlay measurements
   let gridWrapEl: HTMLElement | null = null
   let cellEls: (HTMLElement | null)[] = []
-  let svgSize = { width: 0, height: 0 }
+  let svgSize = $state({ width: 0, height: 0 })
   type ArrowLine = { x1: number; y1: number; x2: number; y2: number; key: string }
-  let arrowLines: ArrowLine[] = []
+  let arrowLines = $state<ArrowLine[]>([])
 
   // Action to collect cell elements by index
   function collectEl(node: HTMLElement, index: number) {
@@ -268,10 +297,14 @@
   }
 
   async function measureArrows() {
-    if (!game.puzzle || !gridWrapEl) { arrowLines = []; return }
+    if (!game.puzzle || !gridWrapEl) { 
+      arrowLines = []; 
+      return 
+    }
     await tick()
     const rect = gridWrapEl.getBoundingClientRect()
-    svgSize = { width: rect.width, height: rect.height }
+    svgSize.width = rect.width
+    svgSize.height = rect.height
     const lines: ArrowLine[] = []
     for (const a of game.puzzle.grid.arrows) {
       const fromEl = cellEls[a.from]
@@ -334,6 +367,25 @@
     }
     return inputCount + 1
   }
+
+  function formatDate(dateStr: string): string {
+    // Parse date as local date to avoid timezone issues
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
+  }
+
+  function navigateToArchive() {
+    // This will be handled by the parent App component
+    // For now, we'll dispatch an event
+    const event = new CustomEvent('navigate', { detail: 'archive' })
+    window.dispatchEvent(event)
+  }
 </script>
 
 <div class="app">
@@ -343,29 +395,23 @@
     </div>
   </header>
   <main>
-    <div class="picker">
-      <select
-        on:change={async (e) => {
-          const id = (e.target as HTMLSelectElement).value
-          await fetchPuzzleById(id)
-          // Load saved state for the new puzzle
-          loadSavedState()
-          await tick()
-          measureArrows()
-        }}
-        bind:value={game.selectedId}
-      >
-          {#each game.index as item}
-            <option value={item.id}>{item.date} · {item.title ?? item.id}</option>
-          {/each}
-        </select>
-    </div>
+    {#if game.puzzle}
+      <div class="puzzle-info">
+        <h1 class="puzzle-title">{game.puzzle.title || 'Daily Puzzle'}</h1>
+        <div class="puzzle-meta">
+          <span class="puzzle-date">{formatDate(game.puzzle.date)}</span>
+          {#if game.puzzle.author}
+            <span class="puzzle-author">by {game.puzzle.author}</span>
+          {/if}
+        </div>
+      </div>
+    {/if}
     {#if game.puzzle}
 
 
 
       <div class="grid-wrap" bind:this={gridWrapEl}>
-        <svg class="arrows" width={svgSize.width} height={svgSize.height} viewBox={`0 0 ${svgSize.width} ${svgSize.height}`} aria-hidden="true">
+        <svg class="arrows" width={svgSize.width || 400} height={svgSize.height || 300} viewBox={`0 0 ${svgSize.width || 400} ${svgSize.height || 300}`} aria-hidden="true">
           <defs>
             <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto" markerUnits="strokeWidth">
               <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" />
@@ -477,41 +523,59 @@
 <style>
   .app { max-width: 880px; margin: 0 auto; padding: 24px; }
   header { margin-bottom: 16px; }
-  .header-content { display: flex; align-items: baseline; gap: 12px; }
-  .logo { height: 40px; width: auto; }
-  .header-text { display: flex; align-items: baseline; gap: 12px; }
-  .subtitle { color: #666; margin: 0; font-size: 16px; }
-  main { border-top: 1px solid #eee; padding-top: 16px; }
-  .meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
-  .title { font-weight: 600; }
-  .picker { 
-    margin-bottom: 16px; 
-    display: flex;
-    align-items: center;
+  .header-content { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    gap: 12px; 
   }
-  
-  .picker select {
-    padding: 8px 12px;
+  .logo { height: 40px; width: auto; }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .nav-btn {
+    padding: 8px 16px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    background: white;
-    color: #374151;
+    background: #ffffff;
+    color: #6b7280;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
-    min-width: 200px;
   }
-  
-  .picker select:focus {
-    outline: none;
-    border-color: #84D9DD;
-    box-shadow: 0 0 0 3px #F8FCFC;
-  }
-  
-  .picker select:hover {
+  .nav-btn:hover {
+    background: #f9fafb;
     border-color: #9ca3af;
+    color: #374151;
   }
+  main { border-top: 1px solid #eee; padding-top: 16px; }
+  .puzzle-info {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .puzzle-title {
+    color: #00AFB6;
+    font-size: 1.8rem;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+  }
+  .puzzle-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+  .puzzle-date {
+    font-weight: 600;
+  }
+
+  .meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+  .title { font-weight: 600; }
+  
 
   .grid {
     display: grid;
@@ -523,10 +587,9 @@
     inset: 0;
     pointer-events: none;
     color: #84D9DD;
+    z-index: 1;
   }
-  .arrows line {
-    stroke: none;
-  }
+
   .cell {
     height: 72px;
     width: 100%;
@@ -586,7 +649,6 @@
   }
   .entry:disabled {
     cursor: not-allowed;
-    opacity: 0.8;
   }
   
   .cell-container {
@@ -686,20 +748,6 @@
     .byline { color: #aaa; }
     .status { color: #aaa; }
     
-    .picker select {
-      background: #1f2937;
-      border-color: #374151;
-      color: #f9fafb;
-    }
-    
-    .picker select:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-    
-    .picker select:hover {
-      border-color: #4b5563;
-    }
     .toolbar button {
       background: #1f2937;
       border-color: #374151;
