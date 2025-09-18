@@ -131,7 +131,7 @@
 
   .puzzle-card {
     background: white;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #C3EBED;
     border-radius: 8px;
     padding: 12px 16px;
     text-align: left;
@@ -166,9 +166,8 @@
   }
 
   .checkmark {
-    color: #00787D;
+    color: #00AFB6;
     font-size: 1rem;
-    font-weight: bold;
   }
 
   .puzzle-title-author {
@@ -191,7 +190,6 @@
   .puzzle-arrow {
     color: #00AFB6;
     font-size: 1rem;
-    font-weight: bold;
     margin-left: 12px;
   }
 
@@ -213,7 +211,7 @@
 
     .puzzle-card {
       background: #1f2937;
-      border-color: #374151;
+      border-color: #C3EBED;
       color: #f9fafb;
     }
 
