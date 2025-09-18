@@ -11,7 +11,7 @@
   // Timer state
   let startTime = $state<number | null>(null)
   let currentTime = $state<number>(0)
-  let timerInterval: number | null = null
+  let timerInterval: ReturnType<typeof setInterval> | null = null
   let isCompleted = $state(false)
   let completionTime = $state<number | null>(null)
 
@@ -301,7 +301,7 @@
   }
 
   // Arrow overlay measurements
-  let gridWrapEl: HTMLElement | null = null
+  let gridWrapEl = $state<HTMLElement | null>(null)
   let cellEls: (HTMLElement | null)[] = []
   let svgSize = $state({ width: 0, height: 0 })
   type ArrowLine = { x1: number; y1: number; x2: number; y2: number; key: string }
@@ -439,12 +439,6 @@
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  function navigateToArchive() {
-    // This will be handled by the parent App component
-    // For now, we'll dispatch an event
-    const event = new CustomEvent('navigate', { detail: 'archive' })
-    window.dispatchEvent(event)
-  }
 </script>
 
 <div class="app">
@@ -506,8 +500,8 @@
                   value={getDisplayValue(i)}
                   data-cell-index={i}
                   disabled={isCellLocked(i)}
-                  on:input={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
-                  on:focus={(e) => {
+                  oninput={(e) => setEntry(i, (e.target as HTMLInputElement).value)}
+                  onfocus={(e) => {
                     focusCell(i)
                     // Position cursor after revealed letters
                     const revealedLength = (game.state.reveals[i]?.length ?? 0)
@@ -516,7 +510,7 @@
                       input.setSelectionRange(revealedLength, revealedLength)
                     }, 0)
                   }}
-                  on:keydown={(e) => {
+                  onkeydown={(e) => {
                     if (isCellLocked(i)) return // Don't allow navigation for locked cells
                     
                     const revealedLength = (game.state.reveals[i]?.length ?? 0)
@@ -570,14 +564,14 @@
       </div>
 
       <div class="toolbar">
-        <button on:click={resetPuzzle} class="reset-btn">Reset puzzle</button>
+        <button onclick={resetPuzzle} class="reset-btn">Reset puzzle</button>
         {#if !isSolved()}
-          <button on:click={revealLetter}>Reveal letter</button>
+          <button onclick={revealLetter}>Reveal letter</button>
         {/if}
         {#if isSolved()}
           <span class="status">Solved!</span>
         {:else}
-          <button on:click={handleSubmit} class="submit-btn">Submit</button>
+          <button onclick={handleSubmit} class="submit-btn">Submit</button>
         {/if}
       </div>
     {:else}
@@ -596,26 +590,6 @@
     gap: 12px; 
   }
   .logo { height: 40px; width: auto; }
-  .header-actions {
-    display: flex;
-    gap: 8px;
-  }
-  .nav-btn {
-    padding: 8px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background: #ffffff;
-    color: #6b7280;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .nav-btn:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
-    color: #374151;
-  }
   main { border-top: 1px solid #eee; padding-top: 16px; }
   .puzzle-info {
     text-align: center;
@@ -653,8 +627,6 @@
     font-weight: 600;
   }
 
-  .meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
-  .title { font-weight: 600; }
   
 
   .grid {
@@ -825,7 +797,6 @@
       border-color: #ef4444;
       background-color: #7f1d1d;
     }
-    .byline { color: #aaa; }
     .status { color: #aaa; }
     
     .completion-time {
@@ -869,5 +840,3 @@
     :global(body) { font-family: InterVariable, sans-serif; }
   }
 </style>
-
-

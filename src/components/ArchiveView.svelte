@@ -38,7 +38,6 @@
       
       // Check if the puzzle was marked as solved
       const isCompleted = state.solved === true
-      console.log(`Puzzle ${puzzleId} completed:`, isCompleted, state)
       return isCompleted
     } catch (e) {
       console.warn('Failed to parse saved state:', e)
@@ -92,7 +91,7 @@
           <button 
             class="puzzle-card"
             class:completed={isPuzzleCompleted(puzzle.id)}
-            on:click={() => selectPuzzle(puzzle.id)}
+            onclick={() => selectPuzzle(puzzle.id)}
           >
             <div class="puzzle-info">
               <div class="puzzle-date">
@@ -290,10 +289,5 @@
     .archive {
       padding: 16px;
     }
-
-    .puzzle-grid {
-      grid-template-columns: 1fr;
-    }
-
   }
 </style>

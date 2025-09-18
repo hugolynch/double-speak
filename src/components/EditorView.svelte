@@ -392,17 +392,17 @@
   <div class="editor-sections">
     <div class="metadata-section">
       <div class="metadata-row">
-        <input type="text" value={meta.title} on:input={(e) => (meta.title = (e.target as HTMLInputElement).value)} placeholder="Title" />
-        <input type="text" value={meta.author} on:input={(e) => (meta.author = (e.target as HTMLInputElement).value)} placeholder="Author" />
-        <input type="date" value={meta.date} on:input={(e) => (meta.date = (e.target as HTMLInputElement).value)} placeholder="Date" />
+        <input type="text" value={meta.title} oninput={(e) => (meta.title = (e.target as HTMLInputElement).value)} placeholder="Title" />
+        <input type="text" value={meta.author} oninput={(e) => (meta.author = (e.target as HTMLInputElement).value)} placeholder="Author" />
+        <input type="date" value={meta.date} oninput={(e) => (meta.date = (e.target as HTMLInputElement).value)} placeholder="Date" />
       </div>
     </div>
 
     <div class="controls">
-      <button on:click={downloadJSON}>Export JSON</button>
-      <button on:click={copyJSON}>Copy JSON</button>
+      <button onclick={downloadJSON}>Export JSON</button>
+      <button onclick={copyJSON}>Copy JSON</button>
       <div class="file-input-wrapper">
-        <input type="file" accept="application/json" on:change={handleImportFile} id="import-file" />
+        <input type="file" accept="application/json" onchange={handleImportFile} id="import-file" />
         <label for="import-file" class="file-input-label">Import JSON</label>
       </div>
     </div>
@@ -414,15 +414,15 @@
       <div class="insert-controls">
         <div class="insert-section">
           <div class="insert-buttons">
-            <button on:click={insertRowAtTop} disabled={rows >= 12} title="Insert row at top">↑</button>
-            <button on:click={insertRowAtBottom} disabled={rows >= 12} title="Insert row at bottom">↓</button>
-            <button on:click={insertColumnAtLeft} disabled={cols >= 12} title="Insert column at left">←</button>
-            <button on:click={insertColumnAtRight} disabled={cols >= 12} title="Insert column at right">→</button>
+            <button onclick={insertRowAtTop} disabled={rows >= 12} title="Insert row at top">↑</button>
+            <button onclick={insertRowAtBottom} disabled={rows >= 12} title="Insert row at bottom">↓</button>
+            <button onclick={insertColumnAtLeft} disabled={cols >= 12} title="Insert column at left">←</button>
+            <button onclick={insertColumnAtRight} disabled={cols >= 12} title="Insert column at right">→</button>
           </div>
         </div>
 
       </div>
-      <button on:click={autoTrim}>Auto-trim unused</button>
+      <button onclick={autoTrim}>Auto-trim unused</button>
     </div>
   </div>
 
@@ -444,7 +444,7 @@
             class="word"
             type="text"
             value={cells[i]?.fixed ?? ''}
-            on:input={(e) => {
+            oninput={(e) => {
               const val = (e.target as HTMLInputElement).value.trim()
               cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), fixed: val || undefined }
             }}
@@ -453,7 +453,7 @@
             <button 
               class="lock-btn"
               type="button"
-              on:click={() => {
+              onclick={() => {
                 const current = cells[i] ?? { isFixed: false, right: false, down: false }
                 cells[i] = { ...current, isFixed: !current.isFixed }
               }}
@@ -463,14 +463,14 @@
             </button>
             <div class="dirs">
               {#if (i % cols) !== cols - 1}
-                <label><input type="checkbox" checked={cells[i]?.right} on:change={(e) => {
+                <label><input type="checkbox" checked={cells[i]?.right} onchange={(e) => {
                   const checked = (e.target as HTMLInputElement).checked
                   cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), right: checked }
                   measureArrows()
                 }} /> →</label>
               {/if}
               {#if Math.floor(i / cols) !== rows - 1}
-                <label><input type="checkbox" checked={cells[i]?.down} on:change={(e) => {
+                <label><input type="checkbox" checked={cells[i]?.down} onchange={(e) => {
                   const checked = (e.target as HTMLInputElement).checked
                   cells[i] = { ...(cells[i] ?? { isFixed: false, right: false, down: false }), down: checked }
                   measureArrows()
@@ -539,12 +539,6 @@
     gap: 4px;
   }
   
-  .insert-label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-    min-width: 40px;
-  }
   
   .insert-buttons {
     display: flex;
@@ -587,7 +581,6 @@
   input::placeholder {
     color: #9ca3af;
   }
-  .sep { width: 1px; height: 24px; background: #d1d5db; display: inline-block; }
   .file-input-wrapper {
     position: relative;
     display: inline-block;
@@ -755,7 +748,6 @@
     .tile.fixed .word {
       font-weight: bold;
     }
-    .sep { background: #374151; }
     .arrows { color: #777; }
     label { color: #f9fafb; }
     input[type="text"], input[type="date"] {
@@ -829,9 +821,6 @@
       color: #f9fafb;
     }
     
-    .insert-label {
-      color: #f9fafb;
-    }
   }
   
   :global(body) { 
@@ -842,5 +831,3 @@
     :global(body) { font-family: InterVariable, sans-serif; }
   }
 </style>
-
-
