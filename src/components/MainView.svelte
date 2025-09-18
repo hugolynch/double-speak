@@ -8,6 +8,13 @@
     String(new Date().getMonth() + 1).padStart(2, '0') + '-' + 
     String(new Date().getDate()).padStart(2, '0')
 
+  // Timer state
+  let startTime = $state<number | null>(null)
+  let currentTime = $state<number>(0)
+  let timerInterval: number | null = null
+  let isCompleted = $state(false)
+  let completionTime = $state<number | null>(null)
+
   function makeDemoPuzzle(): Puzzle {
     return {
       id: 'demo',
@@ -67,6 +74,11 @@
       
       // Load saved state from localStorage
       loadSavedState()
+      
+      // Start timer if puzzle is not already completed
+      if (game.puzzle && !isSolved()) {
+        startTimer()
+      }
     } finally {
       measureArrows()
     }
@@ -106,8 +118,10 @@
   function handleSubmit() {
     const solved = submitAnswers()
     if (solved) {
-      // Puzzle is solved - could show celebration or navigate to next puzzle
+      // Puzzle is solved - stop timer and mark as completed
       console.log('Puzzle solved!')
+      stopTimer()
+      isCompleted = true
     }
     
     // Always focus on the first unsolved cell from the top (left to right)
@@ -231,7 +245,8 @@
       focusedCell: game.state.focusedCell,
       lockedCells: Array.from(game.state.lockedCells),
       incorrectCells: Array.from(game.state.incorrectCells),
-      solved: isSolved()
+      solved: isSolved(),
+      completionTime: completionTime
     }
     localStorage.setItem(`waterfalls-${game.puzzle.id}`, JSON.stringify(state))
   }
@@ -248,6 +263,12 @@
           game.state.focusedCell = state.focusedCell || null
           game.state.lockedCells = new Set(state.lockedCells || [])
           game.state.incorrectCells = new Set(state.incorrectCells || [])
+          
+          // Restore timer state
+          if (state.solved && state.completionTime) {
+            isCompleted = true
+            completionTime = state.completionTime
+          }
         }
       } catch (e) {
         console.warn('Failed to load saved state:', e)
@@ -263,6 +284,8 @@
     game.state.lockedCells = new Set()
     game.state.incorrectCells = new Set()
     localStorage.removeItem(`waterfalls-${game.puzzle.id}`)
+    resetTimer()
+    startTimer() // Restart the timer after reset
   }
 
   // Get the display value for a cell (revealed letters + user input)
@@ -381,6 +404,41 @@
     })
   }
 
+  function startTimer() {
+    if (startTime === null) {
+      startTime = Date.now()
+      timerInterval = setInterval(() => {
+        if (startTime) {
+          currentTime = Math.floor((Date.now() - startTime) / 1000)
+        }
+      }, 1000)
+    }
+  }
+
+  function stopTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval)
+      timerInterval = null
+    }
+    if (startTime) {
+      completionTime = Math.floor((Date.now() - startTime) / 1000)
+    }
+  }
+
+  function resetTimer() {
+    stopTimer()
+    startTime = null
+    currentTime = 0
+    isCompleted = false
+    completionTime = null
+  }
+
+  function formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
   function navigateToArchive() {
     // This will be handled by the parent App component
     // For now, we'll dispatch an event
@@ -403,6 +461,13 @@
           <span class="puzzle-date">{formatDate(game.puzzle.date)}</span>
           {#if game.puzzle.author}
             <span class="puzzle-author">by {game.puzzle.author}</span>
+          {/if}
+        </div>
+        <div class="timer">
+          {#if isCompleted && completionTime !== null}
+            <span class="completion-time">Completed in {formatTime(completionTime)}</span>
+          {:else if startTime !== null}
+            <span class="current-time">Time: {formatTime(currentTime)}</span>
           {/if}
         </div>
       </div>
@@ -555,6 +620,20 @@
   .puzzle-info {
     text-align: center;
     margin-bottom: 24px;
+  }
+
+  .timer {
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+
+  .completion-time {
+    color: #00AFB6;
+    font-weight: 600;
+  }
+
+  .current-time {
+    color: #6b7280;
   }
   .puzzle-title {
     color: #00AFB6;
@@ -748,6 +827,14 @@
     }
     .byline { color: #aaa; }
     .status { color: #aaa; }
+    
+    .completion-time {
+      color: #10b981;
+    }
+    
+    .current-time {
+      color: #9ca3af;
+    }
     
     .toolbar button {
       background: #1f2937;

@@ -46,6 +46,25 @@
     }
   }
 
+  function getPuzzleCompletionTime(puzzleId: string): number | null {
+    const saved = localStorage.getItem(`waterfalls-${puzzleId}`)
+    if (!saved) return null
+    
+    try {
+      const state = JSON.parse(saved)
+      if (state.puzzleId !== puzzleId) return null
+      return state.completionTime || null
+    } catch (e) {
+      return null
+    }
+  }
+
+  function formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
   function selectPuzzle(id: string) {
     // Dispatch event to parent to switch to play mode and load puzzle
     const event = new CustomEvent('puzzleSelect', { detail: id })
@@ -78,10 +97,16 @@
             <div class="puzzle-info">
               <div class="puzzle-date">
                 {formatDate(puzzle.date)}
-                {#if isPuzzleCompleted(puzzle.id)}
-                  <span class="checkmark">✓</span>
-                {/if}
               </div>
+              {#if isPuzzleCompleted(puzzle.id)}
+                {@const completionTime = getPuzzleCompletionTime(puzzle.id)}
+                {#if completionTime}
+                  <div class="completion-time">
+                    Completed in {formatTime(completionTime)}
+                    <span class="checkmark">✓</span>
+                  </div>
+                {/if}
+              {/if}
               <div class="puzzle-title-author">
                 {#if puzzle.title}
                   <span class="puzzle-title">{puzzle.title}</span>
@@ -170,6 +195,15 @@
     font-size: 1rem;
   }
 
+  .completion-time {
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   .puzzle-title-author {
     display: flex;
     align-items: center;
@@ -241,6 +275,10 @@
 
     .checkmark {
       color: #00787D;
+    }
+
+    .completion-time {
+      color: #9ca3af;
     }
 
     .empty-state {
