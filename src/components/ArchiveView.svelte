@@ -212,7 +212,8 @@
     display: flex; 
     align-items: baseline; 
     justify-content: space-between;
-    gap: 16px; 
+    gap: 16px;
+    margin-bottom: -8px;
   }
   
   .header-left {

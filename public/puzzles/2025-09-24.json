@@ -1,0 +1,106 @@
+{
+  "id": "2025-09-24",
+  "date": "2025-09-24",
+  "title": "Excellent idea, sir",
+  "author": "Hugo Lynch",
+  "grid": {
+    "rows": 4,
+    "cols": 4,
+    "cells": [
+      {},
+      {},
+      {
+        "fixed": "perfect"
+      },
+      {},
+      {},
+      {
+        "fixed": "brain"
+      },
+      {},
+      {
+        "fixed": "A stitch in time saves"
+      },
+      {
+        "fixed": "blind"
+      },
+      {},
+      {},
+      {},
+      {
+        "fixed": "slush"
+      },
+      {},
+      {
+        "fixed": "storage"
+      },
+      {
+        "fixed": "inch nails"
+      }
+    ],
+    "arrows": [
+      {
+        "from": 2,
+        "to": 6,
+        "dir": "down"
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 9,
+        "dir": "down"
+      },
+      {
+        "from": 6,
+        "to": 10,
+        "dir": "down"
+      },
+      {
+        "from": 7,
+        "to": 11,
+        "dir": "down"
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 13,
+        "dir": "down"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 14,
+        "dir": "down"
+      },
+      {
+        "from": 11,
+        "to": 15,
+        "dir": "down"
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "dir": "right"
+      }
+    ]
+  },
+  "solutions": {
+    "6": "storm",
+    "9": "trust",
+    "10": "cloud",
+    "11": "nine",
+    "13": "fund"
+  }
+}

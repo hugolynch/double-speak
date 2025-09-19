@@ -1,0 +1,117 @@
+{
+  "id": "2025-09-26",
+  "date": "2025-09-26",
+  "title": "Music to my ears",
+  "author": "Hugo Lynch",
+  "grid": {
+    "rows": 5,
+    "cols": 4,
+    "cells": [
+      {},
+      {
+        "fixed": "Another Brick in the"
+      },
+      {},
+      {},
+      {
+        "fixed": "wonder"
+      },
+      {},
+      {},
+      {},
+      {
+        "fixed": "toilet"
+      },
+      {},
+      {},
+      {
+        "fixed": "blazer"
+      },
+      {
+        "fixed": "audio"
+      },
+      {},
+      {},
+      {
+        "fixed": "tape"
+      },
+      {},
+      {
+        "fixed": "art"
+      },
+      {
+        "fixed": "and match"
+      },
+      {}
+    ],
+    "arrows": [
+      {
+        "from": 1,
+        "to": 5,
+        "dir": "down"
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "dir": "right"
+      },
+      {
+        "from": 5,
+        "to": 9,
+        "dir": "down"
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "dir": "right"
+      },
+      {
+        "from": 9,
+        "to": 13,
+        "dir": "down"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "dir": "right"
+      },
+      {
+        "from": 10,
+        "to": 14,
+        "dir": "down"
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "dir": "right"
+      },
+      {
+        "from": 13,
+        "to": 17,
+        "dir": "down"
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "dir": "right"
+      },
+      {
+        "from": 14,
+        "to": 18,
+        "dir": "down"
+      }
+    ]
+  },
+  "solutions": {
+    "5": "wall",
+    "9": "paper",
+    "10": "trail",
+    "13": "clip",
+    "14": "mix"
+  }
+}
